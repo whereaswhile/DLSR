@@ -2,4 +2,4 @@ DLSR
 ====
 
 DLSR
-This code is mained by UIUC-IFP group.
+This code is maintained by UIUC-IFP group.
