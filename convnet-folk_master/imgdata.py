@@ -266,3 +266,27 @@ class MultRegressionDataProvider(DataProvider):
     def get_aux(self, batch_num):
         pass
 
+class VideoRegressionDataProvider(RegressionDataProvider):
+    # Designed for real-time video super-resolution processing
+    def get_batch_video(self, batch_num):
+        # print 'Here is get_batch_video in imgdata.py'
+        st = batch_num * self.batchsize
+        ed = min((batch_num + 1)*self.batchsize, self.numimgs)
+        cursize = ed - st # (128!!!)
+        data_in  = n.zeros((self.get_data_dims(0), cursize), dtype = n.single)
+        data_out = n.zeros((self.get_data_dims(1), cursize), dtype = n.single) # dummy output data
+        img, data_ref = self.store.get_input()
+
+        for i in range(st, ed):
+            indx = self.indexes[i]            
+            data_in[:, i%self.batchsize] = img2vec(img[indx], True) #use True for vectorize as image        
+        return [data_in, data_out], data_ref
+                 
+    def get_next_batch_video(self):
+        # print 'Here is get_next_batch_video in imgdata.py'
+        self.data_dic, self.ref = self.get_batch_video(self.curr_batchnum) # get_batch_video is in imgdata.py
+        epoch, batchnum = self.curr_epoch, self.curr_batchnum        
+        return epoch, batchnum, self.data_dic, self.ref
+        
+    def close_camera(self):
+        self.store.release_cam()
