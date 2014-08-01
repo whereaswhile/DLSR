@@ -1,0 +1,78 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(CUDACMAKETEST)
+
+include(FindPkgConfig)
+# set(CMAKE_MODULE_PATH "/usr/share/cmake/Modules" ${CMAKE_MODULE_PATH})
+
+
+
+############# Configurations ###############
+set(PY_INC "/usr/include/python2.7")
+set(NUMPY_INC "/usr/lib/python2.7/site-packages/numpy/core/include/numpy")
+
+set(COMMON_FLAGS "-DDEBUG_OUT -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -DUSE_MKL -DNUMPY_INTERFACE -DMODELNAME=_ConvNet -DINITNAME=init_ConvNet")
+
+set(CUDA_FLAGS "-gencode arch=compute_30,code=sm_30")
+set(SDK_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/sdk)
+
+#set(CBLAS_LIBRARIES "-lcblas")
+#set(CBLAS_INCLUDE_DIRS )
+#set(CBLAS_LIBRARY_DIRS )
+############# End #########################
+
+
+
+if ( NOT DEFINED CBLAS_INCLUDE_DIRS )
+  pkg_check_modules(CBLAS cblas)
+endif()
+
+if ( NOT DEFINED CBLAS_INCLUDE_DIRS )
+   message("cblas not found by pkg-config, try use default -lcblas, assume it's not MKL")
+   set(CBLAS_LIBRARIES "-lcblas")
+   set(COMMON_FLAGS "-DDEBUG_OUT -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -DNUMPY_INTERFACE -DMODELNAME=_ConvNet -DINITNAME=init_ConvNet") 
+endif()
+
+find_package(CUDA REQUIRED)
+
+
+file(GLOB_RECURSE cpps "src/*.cpp")
+
+file(GLOB_RECURSE headers "include/*.h")
+
+file(GLOB_RECURSE cucpps "src/*.cu")
+
+file(GLOB_RECURSE testsrc "test/*.cu")
+
+file(GLOB_RECURSE cuheaders "include/*.cuh")
+
+
+set(CUDA_NVCC_FLAGS ${COMMON_FLAGS};${CUDA_NVCC_FLAGS};${CUDA_FLAGS})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
+
+set ( INCLUDE_DIRS
+ ${CBLAS_INCLUDE_DIRS}
+ ${PY_INC}
+ ${NUMPY_INC}
+ ${CMAKE_CURRENT_SOURCE_DIR}/include
+ ${CMAKE_CURRENT_SOURCE_DIR}/include/common
+ ${CMAKE_CURRENT_SOURCE_DIR}/include/nvmatrix
+ ${CMAKE_CURRENT_SOURCE_DIR}/include/cudaconv2
+ ${SDK_DIR}/common/inc
+)
+
+include_directories( ${INCLUDE_DIRS} )
+
+link_directories( ${CBLAS_LIBRARY_DIRS} )
+CUDA_INCLUDE_DIRECTORIES( ${INCLUDE_DIRS} )
+CUDA_ADD_LIBRARY( _ConvNet ${cpps} ${cucpps} SHARED )
+CUDA_ADD_CUBLAS_TO_TARGET( _ConvNet )
+
+set_target_properties(_ConvNet PROPERTIES PREFIX "")
+target_link_libraries( _ConvNet ${CBLAS_LIBRARIES} )
+
+#CUDA_ADD_EXECUTABLE( test_conv ${testsrc} )
+#target_link_libraries( test_conv ${BLAS_LIBRARIES} _ConvNet "python2.7")
+
+#set(CMAKE_CXX_FLAG "-g -Wall")
