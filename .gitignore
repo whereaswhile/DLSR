@@ -1,8 +1,5 @@
 SR/
 vsproj/
 *.pyc
-cuda/build/cudart32_60.dll
-cuda/build/mkl_core.dll
-cuda/build/mkl_intel_thread.dll
-cuda/build/pthreadVC2.dll
-cuda/build/pyconvnet.pyd
+*.dll
+*.pyd
