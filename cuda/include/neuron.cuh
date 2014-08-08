@@ -266,8 +266,7 @@ public:
         ShluGradientOperator(float a) : _a(a) {
         }
         __device__ inline float operator()(float unitActGrad, float unitAct) const  {
-            //return unitActGrad * (unitAct > 0.0f) * (unitAct < _a); 
-            return unitActGrad * (unitAct<-1*_a + unitAct>_a); 
+            return unitActGrad * (unitAct!=0); 
         }
     };
     

@@ -271,7 +271,29 @@ NeuronLayer::NeuronLayer(ConvNet* convNet, PyObject* paramsDict)
 }
 
 void NeuronLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
+	if (0 && _name.compare("neuron1")==0) //debug
+	{
+		cout << "NeuronLayer::bpropActs, initial: " << _name << endl;
+		cout << "v size: " << v.getNumRows() << ", " << v.getNumCols() << endl;
+		cout << "v:" << endl;
+		v.print(100, 100);
+		getActsGrad().print(100, 100);
+		_prev[0]->getActsGrad().print(100, 100);
+		Layer *l=getNext()[0];
+		for (int i=0; i<3; i++)
+		{
+			cout << "layer: " << l->getName() << endl;
+			cout << "v size: " << l->getActsGrad().getNumRows() << ", " << l->getActsGrad().getNumCols() << endl;
+			l->getActsGrad().print(10, 10);
+			l=l->getNext()[0];
+		}
+	}
     _neuron->computeInputGrad(v, _prev[0]->getActsGrad(), scaleTargets > 0);
+	if (0 && _name.compare("neuron1")==0) //debug
+	{
+		v.print(100, 100);
+		_prev[0]->getActsGrad().print(100, 100);
+	}
 }
 
 void NeuronLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
@@ -668,6 +690,13 @@ void ConvLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE
         convImgActs(v, *_weights[inpIdx], _prev[inpIdx]->getActsGrad(), _imgSize->at(inpIdx), _imgSize->at(inpIdx), _modulesX,
                     _padding->at(inpIdx), _stride->at(inpIdx), _channels->at(inpIdx), _groups->at(inpIdx), scaleTargets, 1);
     }
+
+	if (0) //debug
+	{
+		cout << "ConvLayer::bpropActs: " << _name << ", inpIdx=" << inpIdx << endl;
+		v.print(10, 10);
+		_prev[inpIdx]->getActsGrad().print(10, 10);
+	}
 }
 
 void ConvLayer::truncBwdActs() {
@@ -850,6 +879,15 @@ void EltwiseSumLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
 			_prev[inpIdx]->getActsGrad().sliceRows(dim*_numPixels, (dim+1)*_numPixels).add(
 		            v.sliceRows(c*_numPixels, (c+1)*_numPixels), _coeffs->at(inpIdx)); 
 		}
+	}
+	if (0) //debug
+	{
+		cout << "EltwiseSumLayer::bpropActs, dim=" << dim << ", scaleTargets=" << scaleTargets
+				<< ", _numPixels=" << _numPixels << endl;
+		cout << "===== actsgrad =====" << endl;
+		_prev[inpIdx]->getActsGrad().print(10, 1);
+		cout << "===== v =====" << endl;
+		v.print(10, 1);
 	}
 }
 
