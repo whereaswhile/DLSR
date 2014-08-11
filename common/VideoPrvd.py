@@ -18,8 +18,8 @@ from w_util import readLines
 import cv2
 
 class ListaSet:
-    def __init__(self, paramfile):
-        print "Here is in ListaPrvd_stride3.py"        
+    def __init__(self, paramfile):        
+        print "Here is in " + os.path.basename(__file__)
 
         self.indim = 57*57
         self.outdim = 45*45*16 # dummy variable! 
