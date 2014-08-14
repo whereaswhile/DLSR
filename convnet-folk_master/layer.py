@@ -1169,7 +1169,7 @@ class NormLayerParser(LayerWithInputParser):
 			dic['scale'] = mcp.safe_get_float(name, 'scale')
 			dic['scale'] /= dic['size'] if self.norm_type == self.CROSSMAP_RESPONSE_NORM else dic['size']**2
 		dic['pow'] = mcp.safe_get_float(name, 'pow')
-		dic['rnorm_const'] = mcp.safe_get_float(name, 'rnorm_const')
+		dic['rnorm_const'] = mcp.safe_get_float(name, 'rnorm_const', default=2.0) #Wei's default
 
 	def parse(self, name, mcp, prev_layers, model):
 		dic = LayerWithInputParser.parse(self, name, mcp, prev_layers, model)
