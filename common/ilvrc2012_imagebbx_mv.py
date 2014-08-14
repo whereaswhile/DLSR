@@ -48,7 +48,11 @@ class ILVRC2012_Set:
 		print self.pertcomb
                 sys.stdout.flush()
 
-		self.meanImg = np.load(self.param['meanimg'])
+                if self.param['meanimg']=='-1':
+                    print 'no meanimg specified, using 128 as mean'
+                    self.meanImg = np.zeros([256, 256, 3])+128
+                else:
+                    self.meanImg = np.load(self.param['meanimg'])
 		self.meanImg = self.meanImg[16:256-16,16:256-16,:]
 		if self.param['imgsize']!=224:
 			print 'reshape meanImg'
@@ -79,6 +83,9 @@ class ILVRC2012_Set:
                     self.imgList=range(1, 1+len(self.bbx)) #starts from 1
                 elif self.param['imgfile'][-4:]=='.bcf':
                     self.imgList=range(1, 1+len(self.bcfList)) #starts from 1
+                elif 'metafile' in self.param:
+                    meta=sio.loadmat(self.param['metafile'])
+                    self.imgList=range(1, 1+meta['imsize'].shape[1]) #starts from 1
                 else:
                     print 'cannot parse imgList'
                     assert(0)

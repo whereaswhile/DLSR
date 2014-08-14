@@ -73,6 +73,11 @@ class ConvNet(IGPUModel):
             else:
                 layer['dropout'] = 0.0
 
+            if layer['type']=='cmrnorm':
+                if 'rnorm_const' not in layer.keys():
+                    layer['rnorm_const']=self.op.get_value('rnorm_const')
+                print 'use rnorm_const={} in layer {}'.format(layer['rnorm_const'], layer['name'])
+
         print 'start init'
         self.libmodel.initModel(self.layers, self.minibatch_size, self.device_ids[0], self.verbose)
         print 'init done'

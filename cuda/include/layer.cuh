@@ -341,7 +341,7 @@ public:
 class ResponseNormLayer : public Layer {
 protected:
     int _channels, _size;
-    float _scale, _pow;
+    float _scale, _pow, _const;
     NVMatrix _denoms;
 
     void fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType);

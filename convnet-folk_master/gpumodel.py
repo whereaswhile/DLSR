@@ -325,6 +325,9 @@ class IGPUModel:
         op.add_option("zip-save", "zip_save", BooleanOptionParser, "Compress checkpoints?", default=0)
         op.add_option("test-one", "test_one", BooleanOptionParser, "Test on one batch at a time?", default=1)
         op.add_option("gpu", "gpu", ListOptionParser(IntegerOptionParser), "GPU override", default=OptionExpression("[-1] * num_gpus"))
+
+        op.add_option("rnorm-const", "rnorm_const", FloatOptionParser, "constant added to normalization denominator", default=2.0) #Wei's default
+
         return op
 
     @staticmethod

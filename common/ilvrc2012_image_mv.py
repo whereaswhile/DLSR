@@ -47,7 +47,11 @@ class ILVRC2012_Set:
 		print 'image expanded with %d perturbation(s):' % len(self.pertcomb)
 		print self.pertcomb
 
-		self.meanImg = np.load(self.param['meanimg'])
+                if self.param['meanimg']=='-1':
+                    print 'no meanimg specified, using 128 as mean'
+                    self.meanImg = np.zeros([256, 256, 3])+128
+                else:
+                    self.meanImg = np.load(self.param['meanimg'])
 		self.meanImg = self.meanImg[16:256-16,16:256-16,:]
 		self.meanImg = scipy.misc.imresize(np.round(self.meanImg).astype(np.uint8), \
 											(self.param['imgsize'], self.param['imgsize']))
@@ -157,8 +161,8 @@ class ILVRC2012_Set:
 		ratio = 1.0*l / min(w,h)
 		img = scipy.misc.imresize(img, (max(l, int(h*ratio)), max(l, int(w*ratio))))
 		img = getsubimg(img, (1, 1, l, l))
-		if l!=224:
-			self.meanImg
+		#if l!=224:
+                #    self.meanImg
 
 		return img-self.meanImg
 
