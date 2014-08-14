@@ -339,18 +339,18 @@ class ShowConvNet(ConvNet):
         print "input data dimensions: {}".format(data_dims)
         assert(data_dims.count(4)==1)
         label_idx = data_dims.index(4) # regression data
-        self.imgList=readLines(self.img_list)
-        self.imgList=[int(_.rstrip()) for _ in self.imgList]
-        print "%d images found" % len(self.imgList)
+
         sz=sio.loadmat(self.size_file)
         self.imgSize=[(sz['imsize'][0,i][0,0][0][0,0], sz['imsize'][0,i][0,0][1][0,0]) for i in range(len(sz['imsize'][0]))]
 
         if len(self.feature_path)==0:
-        	bb=sio.loadmat(self.bbx_file)
-        	self.bbx=[bb['res'][0][i][0,0][0] for i in range(len(bb['res'][0]))]
-        	assert(self.bbx[0].shape[1]==4)
-        	print "%d bbxes loaded" % len(self.bbx)
-
+            self.imgList=readLines(self.img_list)
+            self.imgList=[int(_.rstrip()) for _ in self.imgList]
+            print "%d images found" % len(self.imgList)
+            bb=sio.loadmat(self.bbx_file)
+            self.bbx=[bb['res'][0][i][0,0][0] for i in range(len(bb['res'][0]))]
+            assert(self.bbx[0].shape[1]==4)
+            print "%d bbxes loaded" % len(self.bbx)
         print "writing features: layer idx={}, {} fitlers, label_idx={}".format(self.ftr_layer_idx, num_ftrs, label_idx)
         print "starting from batch: {}".format(b1)
         while True:
@@ -437,7 +437,7 @@ class ShowConvNet(ConvNet):
     def get_options_parser(cls):
         op = ConvNet.get_options_parser()
         for option in list(op.options):
-            if option not in ('data_path_train', 'data_path_test', 'dp_type_train', 'dp_type_test', 'gpu', 'img_provider_file', 'load_file', 'train_batch_range', 'test_batch_range', 'verbose'):
+            if option not in ('data_path_train', 'data_path_test', 'dp_type_train', 'dp_type_test', 'gpu', 'rnorm_const', 'img_provider_file', 'load_file', 'train_batch_range', 'test_batch_range', 'verbose'):
                 op.delete_option(option)
         op.add_option("test-only", "test_only", BooleanOptionParser, "Test and quit?", default=1)
         op.add_option("show-cost", "show_cost", StringOptionParser, "Show specified objective function", default="")

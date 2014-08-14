@@ -1040,7 +1040,7 @@ __global__ void kCNorm2(float* imgs, float* meanDiffs, float* denoms, float* tar
 template<int B_Y, int B_X, int imgsPerThread, bool checkCaseBounds, bool blocked>
 __global__ void kFCNorm(float* imgs, float* meanDiffs, float* denoms, float* target, const int imgSize,
                                   const int numFilters, const int numImages, const int sizeF, 
-                                  const float addScale, const float powScale) {
+                                  const float addScale, const float powScale, const float denomConst) {
     const int imgPixels = imgSize * imgSize;
     const int numImgBlocks = DIVUP(numImages, B_X*imgsPerThread);
     const int numFilterBlocks = numFilters/B_Y;
@@ -1083,8 +1083,9 @@ __global__ void kFCNorm(float* imgs, float* meanDiffs, float* denoms, float* tar
     #pragma unroll
     for (int i = 0; i < imgsPerThread; i++) {
         if (!checkCaseBounds || imgIdx + i * B_X < numImages) {
-	  //            prod[i] = 1 + addScale * prod[i];
-            prod[i] = 2 + addScale * prod[i];
+	  //   prod[i] = 1 + addScale * prod[i]; //cuda convnet original
+      //   prod[i] = 2 + addScale * prod[i]; //Wei's
+            prod[i] = denomConst + addScale * prod[i];
             denoms[i * B_X] = prod[i];
             target[i * B_X] = imgs[i * B_X] * __powf(prod[i], -powScale);
         }
@@ -2861,7 +2862,7 @@ void convTICA(NVMatrix& images, NVMatrix& target, int numFilters, int sizeX, flo
  * by Zhaowen 2014.6.2: add cross map global response normalization 
  */
 void convContrastNormCrossMap(NVMatrix& images, NVMatrix& meanDiffs, NVMatrix& denoms, NVMatrix& target,
-                             int numFilters, int sizeF, float addScale, float powScale, bool blocked)
+                             int numFilters, int sizeF, float addScale, float powScale, float denomConst, bool blocked)
 {
     int numImages = images.getNumCols();
     int imgPixels = images.getNumRows() / numFilters;
@@ -2897,11 +2898,11 @@ void convContrastNormCrossMap(NVMatrix& images, NVMatrix& meanDiffs, NVMatrix& d
         if (checkCaseBounds) {
             cudaFuncSetCacheConfig(kFCNorm<4, 32, 4, true, true>, cudaFuncCachePreferL1);
             kFCNorm<4, 32, 4, true, true><<<blocks, threads>>>(images.getDevData(), meanDiffs.getDevData(), denoms.getDevData(), target.getDevData(),
-                                                                imgSize, numFilters, numImages, sizeF, addScale, powScale);
+                                                                imgSize, numFilters, numImages, sizeF, addScale, powScale, denomConst);
         } else {
             cudaFuncSetCacheConfig(kFCNorm<4, 32, 4, false, true>, cudaFuncCachePreferL1);
             kFCNorm<4, 32, 4, false, true><<<blocks, threads>>>(images.getDevData(), meanDiffs.getDevData(), denoms.getDevData(), target.getDevData(),
-                                                                imgSize, numFilters, numImages, sizeF, addScale, powScale);
+                                                                imgSize, numFilters, numImages, sizeF, addScale, powScale, denomConst);
         }
     }
     else
@@ -2912,7 +2913,7 @@ void convContrastNormCrossMap(NVMatrix& images, NVMatrix& meanDiffs, NVMatrix& d
 			{
 				cudaFuncSetCacheConfig(kFCNorm<4, 32, 4, true, false>, cudaFuncCachePreferL1);
 				kFCNorm<4, 32, 4, true, false><<<blocks, threads>>>(images.getDevData(), meanDiffs.getDevData(),
-									denoms.getDevData(), target.getDevData(), imgSize, numFilters, numImages, sizeF, addScale, powScale);
+									denoms.getDevData(), target.getDevData(), imgSize, numFilters, numImages, sizeF, addScale, powScale, denomConst);
 			}
 			else //cross map global response norm
 			{
@@ -2931,7 +2932,7 @@ void convContrastNormCrossMap(NVMatrix& images, NVMatrix& meanDiffs, NVMatrix& d
 			{
 				cudaFuncSetCacheConfig(kFCNorm<4, 32, 4, false, false>, cudaFuncCachePreferL1);
 				kFCNorm<4, 32, 4, false, false><<<blocks, threads>>>(images.getDevData(), meanDiffs.getDevData(),
-									denoms.getDevData(), target.getDevData(), imgSize, numFilters, numImages, sizeF, addScale, powScale);
+									denoms.getDevData(), target.getDevData(), imgSize, numFilters, numImages, sizeF, addScale, powScale, denomConst);
 			}
 			else //cross map global response norm
 			{
@@ -2957,7 +2958,7 @@ void convContrastNormCrossMap(NVMatrix& images, NVMatrix& meanDiffs, NVMatrix& d
  * THIS WILL OVERWRITE THE ACTS MATRIX.
  */
 void convResponseNormCrossMapUndo(NVMatrix& outGrads, NVMatrix& denoms, NVMatrix& inputs, NVMatrix& acts, NVMatrix& target, int numFilters,
-                         int sizeF, float addScale, float powScale, bool blocked, float scaleTargets, float scaleOutput) {
+                         int sizeF, float addScale, float powScale, float denomConst, bool blocked, float scaleTargets, float scaleOutput) {
     int numImages = outGrads.getNumCols();
     int imgPixels = outGrads.getNumRows() / numFilters;
     int imgSize = int(sqrt(imgPixels));
@@ -3082,8 +3083,8 @@ void convResponseNormCrossMapUndo(NVMatrix& outGrads, NVMatrix& denoms, NVMatrix
     getLastCudaError("convResponseNormCrossMapUndo: kernel execution failed");
 }
 
-void convResponseNormCrossMap(NVMatrix& images, NVMatrix& denoms, NVMatrix& target, int numFilters, int sizeF, float addScale, float powScale, bool blocked) {
-    convContrastNormCrossMap(images, images, denoms, target, numFilters, sizeF, addScale, powScale, blocked);
+void convResponseNormCrossMap(NVMatrix& images, NVMatrix& denoms, NVMatrix& target, int numFilters, int sizeF, float addScale, float powScale, float denomConst, bool blocked) {
+    convContrastNormCrossMap(images, images, denoms, target, numFilters, sizeF, addScale, powScale, denomConst, blocked);
 }
 
 void parseBoundBox(NVMatrix& b, NVMatrix& w, NVMatrix& h, NVMatrix& a)

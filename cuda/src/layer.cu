@@ -1351,6 +1351,7 @@ ResponseNormLayer::ResponseNormLayer(ConvNet* convNet, PyObject* paramsDict) : L
 
     _scale = pyDictGetFloat(paramsDict, "scale");
     _pow = pyDictGetFloat(paramsDict, "pow");
+	_const = pyDictGetFloat(paramsDict, "rnorm_const");
 }
 
 void ResponseNormLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
@@ -1378,11 +1379,12 @@ CrossMapResponseNormLayer::CrossMapResponseNormLayer(ConvNet* convNet, PyObject*
 }
 
 void CrossMapResponseNormLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
-    convResponseNormCrossMap(*_inputs[0], _denoms, getActs(), _channels, _size, _scale, _pow, _blocked);
+    convResponseNormCrossMap(*_inputs[0], _denoms, getActs(), _channels, _size, _scale, _pow, _const, _blocked);
 }
 
 void CrossMapResponseNormLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
-    convResponseNormCrossMapUndo(v, _denoms, _prev[0]->getActs(), getActs(), _prev[0]->getActsGrad(), _channels, _size, _scale, _pow, _blocked, scaleTargets, 1);
+    convResponseNormCrossMapUndo(v, _denoms, _prev[0]->getActs(), getActs(), _prev[0]->getActsGrad(), _channels, _size, _scale, _pow, _const,
+								_blocked, scaleTargets, 1);
 }
 
 /* 
@@ -1398,13 +1400,13 @@ ResponseNormLayer(convNet, paramsDict)
 
 void CrossMapGlobalResponseNormLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType)
 {
-    convResponseNormCrossMap(*_inputs[0], _denoms, getActs(), _channels, 0, 0, _pow, _blocked);
+    convResponseNormCrossMap(*_inputs[0], _denoms, getActs(), _channels, 0, 0, _pow, 0, _blocked);
 }
 
 void CrossMapGlobalResponseNormLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType)
 {
     convResponseNormCrossMapUndo(v, _denoms, _prev[0]->getActs(), getActs(), _prev[0]->getActsGrad(), _channels, 0, 0,
-								_pow, _blocked, scaleTargets, 1);
+								_pow, 0, _blocked, scaleTargets, 1);
 }
 
 

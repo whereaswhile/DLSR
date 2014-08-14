@@ -399,7 +399,7 @@ class ShowConvNet(ConvNet):
     def get_options_parser(cls):
         op = ConvNet.get_options_parser()
         for option in list(op.options):
-            if option not in ('data_path_train', 'data_path_test', 'dp_type_train', 'dp_type_test', 'gpu', 'img_provider_file', 'load_file', 'train_batch_range', 'test_batch_range', 'verbose'):
+            if option not in ('data_path_train', 'data_path_test', 'dp_type_train', 'dp_type_test', 'gpu', 'rnorm_const', 'img_provider_file', 'load_file', 'train_batch_range', 'test_batch_range', 'verbose'):
                 op.delete_option(option)
         op.add_option("test-only", "test_only", BooleanOptionParser, "Test and quit?", default=1)
         op.add_option("show-cost", "show_cost", StringOptionParser, "Show specified objective function", default="")
