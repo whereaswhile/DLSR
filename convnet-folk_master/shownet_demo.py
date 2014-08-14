@@ -22,6 +22,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Modified for the real-time demo of video SR (1. video files; 2. frames captured from webcam)
 # Note: Sewing patches into one single image is implemented in Python! 
 # Designed for stride = 3
 # (1) All overlap (is commentted)
