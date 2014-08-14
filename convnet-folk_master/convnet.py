@@ -46,6 +46,7 @@ class ConvNet(IGPUModel):
         filename_options = []
         dp_params['multiview_test'] = op.get_value('multiview_test')
         dp_params['crop_border'] = op.get_value('crop_border')
+        dp_params['minibatch_size'] = op.get_value('minibatch_size')        
         #dp_params['nib'] = op.get_value('nib')
         try:
             if op.get_value('dp_param_file') != "":

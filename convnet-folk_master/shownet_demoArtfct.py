@@ -340,6 +340,14 @@ class ShowConvNet(ConvNet):
         Rms2_sum = 0 # for proposed 
         frame_num = 1000 # number of batches fetched 
         
+        # video  = cv2.VideoWriter('video_HighRes.avi', -1, 20, (464, 368)) # size designed for vxid compression
+        video  = cv2.VideoWriter('video_HighRes.avi', -1, 24, (477, 371)) # size designed for uncompressed
+        if video.isOpened():
+            print 'Video is initialized successfully!'
+        video2  = cv2.VideoWriter('video_LowRes.avi', -1, 24, (241, 188)) 
+        if video2.isOpened():
+            print 'Video2 is initialized successfully!'
+        
         threadLock = threading.Lock() # to synchronize list operations
         if isinstance( next_data[3][0], list): # frames are captured from video files
             t = threading.Thread( target=show_image, args=(self.orinList, self.lresList, self.hresList, self.bicuList, threadLock,))
@@ -347,14 +355,6 @@ class ShowConvNet(ConvNet):
             t = threading.Thread( target=show_camera_image, args=(self.orinList, self.hresList, self.bicuList, threadLock,))
 
         t.start()
-        
-        # video  = cv2.VideoWriter('video_HighRes.avi', -1, 20, (464, 368)) # size designed for vxid compression
-        video  = cv2.VideoWriter('video_HighRes.avi', -1, 25, (477, 371)) # size designed for uncompressed
-        if video.isOpened():
-            print 'Video is initialized successfully!'
-        video2  = cv2.VideoWriter('video_LowRes.avi', -1, 25, (241, 188)) 
-        if video2.isOpened():
-            print 'Video2 is initialized successfully!'
             
         Start2 = time.time()
         for iout in range( frame_num):
@@ -622,7 +622,7 @@ def show_image( OrinList, LresList, HresList, BicuList, threadLock):
         
 def show_camera_image( OrinList, HresList, BicuList, threadLock):
     # Designed for processing images captured from camera
-    time.sleep(8) # unit: sec
+    time.sleep(2) # unit: sec
     threadLock.acquire()
     if not OrinList:
         print 'It does not work!'

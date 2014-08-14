@@ -14,7 +14,8 @@ class ClassificationDataProvider(DataProvider):
 
         self.data_dir = data_dir
     
-        self.batchsize = 128
+        # self.batchsize = 128
+        self.batchsize = dp_params['minibatch_size']
     
         print 'Getting image provider from', dp_params['imgprovider']
 
@@ -75,7 +76,8 @@ class MultInstClsDataProvider(DataProvider):
         DataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test, read_meta=False)
 
         self.data_dir = data_dir
-        self.batchsize = 128
+        # self.batchsize = 128
+        self.batchsize = dp_params['minibatch_size']
     
         print 'class: MultInstClsDataProvider, getting image provider from', dp_params['imgprovider']
 
@@ -144,7 +146,8 @@ class RegressionDataProvider(DataProvider):
         DataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test, read_meta=False)
 
         self.data_dir = data_dir
-        self.batchsize = 128
+        # self.batchsize = 128
+        self.batchsize = dp_params['minibatch_size']
 
         print 'class: RegDataProv, getting image provider from', dp_params['imgprovider']
         self.store = imp.load_source('neo', dp_params['imgprovider']).getStore(self.data_dir)
@@ -205,8 +208,9 @@ class MultRegressionDataProvider(DataProvider):
         DataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test, read_meta=False)
 
         self.data_dir = data_dir
-        self.batchsize = 128
-
+        # self.batchsize = 128
+        self.batchsize = dp_params['minibatch_size']
+        
         print 'class: MultRegDataProv, getting image provider from', dp_params['imgprovider']
         self.store = imp.load_source('neo', dp_params['imgprovider']).getStore(self.data_dir)
 
