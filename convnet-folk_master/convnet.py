@@ -163,7 +163,7 @@ class ConvNet(IGPUModel):
         print "(%.3f sec)" % (compute_time_py)
         
     def print_costs(self, cost_outputs):
-        costs, num_cases = cost_outputs[0], cost_outputs[1]
+        costs, num_cases = cost_outputs[0].copy(), cost_outputs[1]
         for errname in costs.keys():
             costs[errname] = [(v/num_cases) for v in costs[errname]]
             print "%s: " % errname,
@@ -174,6 +174,10 @@ class ConvNet(IGPUModel):
         
     def print_train_results(self):
         self.print_costs(self.train_outputs[-1])
+        
+    def print_whole_train_results(self):
+        print "======================Training: ",
+        self.print_costs( self.aggregate_test_outputs( self.train_outputs))
         
     def print_test_status(self):
         pass
@@ -198,7 +202,7 @@ class ConvNet(IGPUModel):
         self.save_state()
         print "-------------------------------------------------------"
         print "Saved checkpoint to %s" % os.path.join(self.save_path, self.save_file)
-        print "=======================================================",
+        print "======================================================="
         
     def aggregate_test_outputs(self, test_outputs):
         num_cases = sum(t[1] for t in test_outputs)

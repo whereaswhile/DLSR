@@ -142,11 +142,14 @@ class IGPUModel:
         print "Saving checkpoints to %s" % os.path.join(self.save_path, self.save_file)
         print "========================="
         next_data = self.get_next_batch()
-        while self.epoch <= self.num_epochs:
-            #            print 'Next!'
-            sys.stdout.flush()            
+
+        while True:
+            sys.stdout.flush()              
             data = next_data
             self.epoch, self.batchnum = data[0], data[1]
+            if self.epoch > self.num_epochs:
+                break
+               
             self.print_iteration()
             sys.stdout.flush()
             compute_time_py = time()
@@ -159,15 +162,19 @@ class IGPUModel:
             batch_output = self.finish_batch()
             self.train_outputs += [batch_output]
             self.print_train_results()
-
+            self.print_train_time(time() - compute_time_py)
+                      
+            if self.batchnum == len(self.train_batch_range)-1:
+                self.print_whole_train_results()
+                self.train_outputs = [] # reset this variable in every epoch!
+                
             if self.get_num_batches_done() % self.testing_freq == 0:
                 self.sync_with_host()
                 self.test_outputs += [self.get_test_error()]
                 self.print_test_results()
                 self.print_test_status()
                 self.conditional_save()
-            
-            self.print_train_time(time() - compute_time_py)
+               
         self.cleanup()
     
     def cleanup(self):
@@ -217,7 +224,11 @@ class IGPUModel:
             self.cleanup()
 
         print "Train error: %.6f " % (batch_error),
-
+    
+    def print_whole_train_results(self):
+        # You must not run into here!
+        print 'You must not run into here!'
+    
     def print_test_results(self):
         batch_error = self.test_outputs[-1][0]
         print "%s\t\tTest error: %.6f" % (NL, batch_error),
@@ -253,7 +264,7 @@ class IGPUModel:
             if not load_next:
                 break
             sys.stdout.flush()
-            
+
         return self.aggregate_test_outputs(test_outputs)
     
     def set_var(self, var_name, var_val):
