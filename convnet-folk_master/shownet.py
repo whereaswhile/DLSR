@@ -54,15 +54,16 @@ class ShowConvNet(ConvNet):
         self.need_gpu = self.op.get_value('show_preds') or self.op.get_value('write_features') or self.op.get_value('write_pixel_proj')
         if self.need_gpu:
             ConvNet.get_gpus(self)
-    
-    def init_data_providers(self):
-        class Dummy:
-            def advance_batch(self):
-                pass
-        if self.need_gpu:
-            ConvNet.init_data_providers(self)
-        else:
-            self.train_data_provider = self.test_data_provider = Dummy()
+            
+    # Note: this method is redefined later!
+    # def init_data_providers(self):
+        # class Dummy:
+            # def advance_batch(self):
+                # pass
+        # if self.need_gpu:
+            # ConvNet.init_data_providers(self)
+        # else:
+            # self.train_data_provider = self.test_data_provider = Dummy()
     
     def import_model(self):
         if self.need_gpu:
