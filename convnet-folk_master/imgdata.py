@@ -184,7 +184,7 @@ class RegressionDataProvider(DataProvider):
     def get_data_dims(self, idx=0):
         if idx==0: #input data dimension
             return self.store.get_input_dim()
-	else: #output data dimension
+        else: #output data dimension
             return self.store.get_output_dim()
 
     def get_batch(self, batch_num):
@@ -272,6 +272,22 @@ class MultRegressionDataProvider(DataProvider):
 
 class VideoRegressionDataProvider(RegressionDataProvider):
     # Designed for real-time video super-resolution processing
+    
+    def get_batch(self, batch_num): # overwrite the old version in class "RegressionDataProvider"
+        # used for the task of general video super-resolution 
+        st = batch_num * self.batchsize
+        ed = min((batch_num + 1)*self.batchsize, self.numimgs)
+        cursize = ed - st
+        data_in  = n.zeros((self.get_data_dims(0), cursize), dtype = n.single)
+        data_out = n.zeros((self.get_data_dims(1), cursize), dtype = n.single)
+        
+        for i in range(st, ed):
+            img = self.store.get_input( )  
+            data_in[:, i%self.batchsize] = img2vec(img, True) #use True for vectorize as image 
+            # img = self.store.get_output(self.indexes[i])            
+            # data_out[:, i%self.batchsize] = img2vec(img, True)
+        return [data_in, data_out]
+    
     def get_batch_video(self, batch_num):
         # print 'Here is get_batch_video in imgdata.py'
         st = batch_num * self.batchsize

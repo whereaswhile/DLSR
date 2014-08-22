@@ -313,7 +313,7 @@ class ShowConvNet(ConvNet):
             dp = self.test_data_provider           
         else:
             dp = self.train_data_provider      
-        return self.parse_batch_data(dp.get_next_batch_video(), train=train) # dp.get_next_batch_video is in imgdata.py
+        return self.parse_batch_data(dp.get_next_batch_video(), train=train) # dp.get_next_batch_video is in imgdata.py (class: VideoRegressionDataProvider)
         
     def close_camera(self):
         dp = self.test_data_provider

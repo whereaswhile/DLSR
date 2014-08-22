@@ -309,20 +309,20 @@ class ShowConvNet(ConvNet):
         num_ftrs = self.layers[self.ftr_layer_idx]['outputs']
         data_dims = [_.shape[0] for _ in next_data[2]]
         print "input data dimensions: {}".format(data_dims)
-	if data_dims.count(1)==1:
-	    label_idx = data_dims.index(1)
-	elif data_dims.count(1)==0: # regression data
-	    label_idx = 1
-	else:
-	    raise ShowNetError("data_dims invalid format!")
-        print "writing features: layer idx={}, {} fitlers, label_idx={}".format(self.ftr_layer_idx, num_ftrs, label_idx)
-        print "starting from batch: {}".format(b1)
+        if data_dims.count(1)==1:
+            label_idx = data_dims.index(1)
+        elif data_dims.count(1)==0: # regression data
+            label_idx = 1
+        else:
+            raise ShowNetError("data_dims invalid format!")
+            print "writing features: layer idx={}, {} fitlers, label_idx={}".format(self.ftr_layer_idx, num_ftrs, label_idx)
+            print "starting from batch: {}".format(b1)
         while True:
             batch = next_data[1]
             data = next_data[2]
             ftrs = n.zeros((data[0].shape[1], num_ftrs), dtype=n.single)
             self.libmodel.startFeatureWriter(data + [ftrs], self.ftr_layer_idx)
-            
+
             # load the next batch while the current one is computing
             next_data = self.get_next_batch(train=False)
             self.finish_batch()
@@ -331,7 +331,7 @@ class ShowConvNet(ConvNet):
                 output['aux'] = self.test_data_provider.getftraux()
             except AttributeError:
                 pass
-            
+
             if len(self.feature_path)==0: #evaluate only
                 nacc, ncnt=self.increase_acc_count(ftrs, data[label_idx][0], nacc, ncnt)
                 print "Batch %d evaluated: %.2f" % (batch, 1.0*nacc/ncnt*100)
