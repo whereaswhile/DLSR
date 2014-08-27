@@ -1,4 +1,6 @@
 import numpy as n
+import cPickle as pickle
+import scipy.io as sio
 
 def readLines(fname):
     with open(fname, 'r') as fid:
@@ -130,3 +132,8 @@ def gray2vec(gray):
     chvec = gray.flatten()
     vec = n.concatenate((chvec, chvec, chvec))
     return vec
+
+def pickle2mat(fn, matfn):
+    d=pickle.load(open(fn, "rb"))
+    sio.savemat(matfn, {'d': d})
+

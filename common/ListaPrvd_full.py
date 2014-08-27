@@ -10,32 +10,42 @@ import glob
 sys.path.append("../convnet-folk_master")
 from w_util import readLines
 
-# define default parameters
-MAT_IN_VAR='Input_SR'
-MAT_OUT_VAR='hIm1' #'Z'
-
 class ListaSet:
     def __init__(self, paramfile):
-        print "ListaPrvd_full with paramfile:", paramfile, " (", MAT_IN_VAR, MAT_OUT_VAR, ")"
+        MAT_IN_VAR='Input_SR' # define default parameters
+        MAT_OUT_VAR='hIm1' #'Z'
+
         self.param = {'paramfile': paramfile}
         plines=readLines(paramfile)
         for l in plines:
             l=l.rstrip().split()
             self.param[l[0]]=l[1]
 # 	print self.param
+        if 'MAT_IN_VAR' in self.param:
+            MAT_IN_VAR=self.param['MAT_IN_VAR']
+        if 'MAT_OUT_VAR' in self.param:
+            MAT_OUT_VAR=self.param['MAT_OUT_VAR']
+        print "ListaPrvd_full with paramfile:", paramfile, " (", MAT_IN_VAR, MAT_OUT_VAR, ")"
 
         d=scipy.io.loadmat(self.param['imgdata'])
         self.X=d[MAT_IN_VAR]
         self.Z=d[MAT_OUT_VAR]
-        self.indim=np.prod(np.shape(self.X))
-        self.outdim=np.prod(np.shape(self.Z))
-        self.datanum=1 # data number
-        self.input=[self.X]
-        if self.param['train']=='1':
+        assert(len(np.shape(self.X))==2)
+        if np.shape(self.X)[0]!=1: #single sample
+            self.datanum=1 # data number
+            self.indim=np.prod(np.shape(self.X))
+            self.outdim=np.prod(np.shape(self.Z))
+            self.input=[self.X]
             self.output=[self.Z]
-            print self.output[0].dtype
         else:
-            self.output=[self.Z*0]
+            self.datanum=self.X.shape[1]
+            self.indim=np.prod(np.shape(self.X[0,0]))
+            self.outdim=np.prod(np.shape(self.Z[0,0]))
+            self.input=[self.X[0, i] for i in range(self.datanum)]
+            self.output=[self.Z[0, i] for i in range(self.datanum)]
+        if self.param['train']=='0':
+            self.output=[_*0 for _ in self.output]
+        print '%d samples found' % self.datanum
 
     def get_num_images(self):
         return self.datanum
