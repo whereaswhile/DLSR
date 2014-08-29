@@ -33,7 +33,10 @@
 #include <cudaconv2.cuh>
 #include <matrix.h>
 
+//#define DEBUG
+
 using namespace std;
+
 
 /* 
  * =======================
@@ -260,6 +263,23 @@ NVMatrix& Layer::getActsGrad() {
     return *_actsGrad;
 }
 
+void checkNaN(NVMatrix &mat, string name) {
+    //    return ;
+    Matrix *tmp = new Matrix();
+    mat.copyToHost(*tmp, true);
+    
+    if (tmp->hasNan()) {
+	printf("!!!! the matrix %s has NaN\n", name.c_str());
+	//assert(false);
+    }
+	/*
+    if (tmp->hasInf()) {
+	printf("!!!! the matrix %s has Inf\n", name.c_str());
+	assert(false);
+    }
+    */
+}
+
 /* 
  * =======================
  * NeuronLayer
@@ -271,16 +291,17 @@ NeuronLayer::NeuronLayer(ConvNet* convNet, PyObject* paramsDict)
 }
 
 void NeuronLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
-	if (0 && _name.compare("neuron1")==0) //debug
+#ifdef DEBUG
+	if (1 && _name.compare("rms_neuron")==0) //debug
 	{
 		cout << "NeuronLayer::bpropActs, initial: " << _name << endl;
 		cout << "v size: " << v.getNumRows() << ", " << v.getNumCols() << endl;
 		cout << "v:" << endl;
-		v.print(100, 100);
-		getActsGrad().print(100, 100);
-		_prev[0]->getActsGrad().print(100, 100);
+		v.print(50, 1);
+		getActsGrad().print(50, 1);
+		_prev[0]->getActsGrad().print(50, 1);
 		Layer *l=getNext()[0];
-		for (int i=0; i<3; i++)
+		for (int i=0; i<0; i++)
 		{
 			cout << "layer: " << l->getName() << endl;
 			cout << "v size: " << l->getActsGrad().getNumRows() << ", " << l->getActsGrad().getNumCols() << endl;
@@ -288,16 +309,28 @@ void NeuronLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TY
 			l=l->getNext()[0];
 		}
 	}
+#endif
     _neuron->computeInputGrad(v, _prev[0]->getActsGrad(), scaleTargets > 0);
-	if (0 && _name.compare("neuron1")==0) //debug
+#ifdef DEBUG
+	if (1 && _name.compare("rms_neuron")==0) //debug
 	{
-		v.print(100, 100);
-		_prev[0]->getActsGrad().print(100, 100);
+		cout << _name << endl;
+		_prev[0]->getActsGrad().print(50, 1);
+		checkNaN(_prev[0]->getActsGrad(), "prev acts grad");
 	}
+#endif
 }
 
 void NeuronLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
     _neuron->activate(*_inputs[0], getActs());
+#ifdef DEBUG
+	if (0) //debug
+	{
+		cout << "NeuronLayer::fpropActs, " << _name << endl;
+		_inputs[0]->print(2, 6);
+		getActs().print(2, 6);
+	}
+#endif
 }
 
 /* 
@@ -509,6 +542,16 @@ void FCLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
 }
 
 void FCLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
+#ifdef DEBUG
+	if (1) //debug
+	{   
+		cout << "FCLayer::bpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
+		v.printShape("v");
+		v.print(64, 1);
+		checkNaN(v, "v");
+		_prev[inpIdx]->getActsGrad().printShape("prev acts grad");
+	}
+#endif
     NVMatrix& weights_T = _weights[inpIdx].getW().getTranspose();
     _prev[inpIdx]->getActsGrad().addProduct(v, weights_T, scaleTargets, 1);
     delete &weights_T;
@@ -523,22 +566,6 @@ void FCLayer::bpropBiases(NVMatrix& v, PASS_TYPE passType) {
 }
 
 
-void checkNaN(NVMatrix &mat, string name) {
-    //    return ;
-    Matrix *tmp = new Matrix();
-    mat.copyToHost(*tmp, true);
-    /*
-    if (tmp->hasNan()) {
-	printf("!!!! the matrix %s has NaN\n", name.c_str());
-	assert(false);
-    }
-    if (tmp->hasInf()) {
-	printf("!!!! the matrix %s has Inf\n", name.c_str());
-	assert(false);
-    }
-    */
-
-}
 void FCLayer::bpropWeights(NVMatrix& v, int inpIdx, PASS_TYPE passType) {
     int numCases = v.getNumRows();
 
@@ -553,6 +580,20 @@ void FCLayer::bpropWeights(NVMatrix& v, int inpIdx, PASS_TYPE passType) {
     
     //checkNaN(_weights[inpIdx].getGrad(), "fcbpropWeights_weight");
     delete &prevActs_T;
+
+#ifdef DEBUG
+	if (0) //debug
+	{   
+		cout << "FCLayer::bpropWeights, " << _name << ", inpIdx=" << inpIdx << endl;
+		v.printShape("v");
+		v.print(2, 6);
+		checkNaN(v, "v");
+		_prev[inpIdx]->getActs().print(2, 6);
+		checkNaN(_prev[inpIdx]->getActs(), "prev acts");
+		//_weights[inpIdx].getGrad().print(2, 6);
+		//checkNaN(_weights[inpIdx].getGrad(), "w grad");
+	}
+#endif
 }
 
 /* 
@@ -631,6 +672,15 @@ void ConvLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
             getActs().addVector(_biases->getW());
         }
     }
+#ifdef DEBUG
+	if (0) //debug
+	{
+		cout << "ConvLayer::fpropActs: " << _name << endl;
+		_inputs[inpIdx]->print(2, 6);
+		_weights[inpIdx].getW().print(2, 6);
+		getActs().print(2, 6);
+	}
+#endif
 }
 
 void ConvLayer::bpropBiases(NVMatrix& v, PASS_TYPE passType) {
@@ -661,8 +711,29 @@ void ConvLayer::bpropWeights(NVMatrix& v, int inpIdx, PASS_TYPE passType) {
                              _filterSize->at(inpIdx), _padding->at(inpIdx), _stride->at(inpIdx), _channels->at(inpIdx),
                              _filterChannels->at(inpIdx), _groups->at(inpIdx), _partialSum, scaleTargets, scaleWGrad);
     } else {
+#ifdef DEBUG
+		if (0) //debug
+		{
+			cout << "ConvLayer::bpropWeights-1, " << _name << ", inpIdx=" << inpIdx << endl;
+			_prev[inpIdx]->getActs().print(2, 6);
+			v.print(2, 6);
+			_weights[inpIdx].getGrad().print(2, 6);
+			checkNaN(_prev[inpIdx]->getActs(), "prev acts");
+			checkNaN(v, "v");
+			v.printShape("v");
+			checkNaN(_weights[inpIdx].getGrad(), "w grad");
+		}
+#endif
         convWeightActs(_prev[inpIdx]->getActs(), v, tgt, _imgSize->at(inpIdx), _modulesX, _modulesX, _filterSize->at(inpIdx), _padding->at(inpIdx),
                        _stride->at(inpIdx), _channels->at(inpIdx), _groups->at(inpIdx), _partialSum, scaleTargets, scaleWGrad);
+#ifdef DEBUG
+		if (0) //debug
+		{
+			cout << "ConvLayer::bpropWeights0" << endl;
+			_weights[inpIdx].getGrad().print(2, 6);
+			checkNaN(_weights[inpIdx].getGrad(), "w grad");
+		}
+#endif
     }
 
     if (_partialSum > 0) {
@@ -671,8 +742,15 @@ void ConvLayer::bpropWeights(NVMatrix& v, int inpIdx, PASS_TYPE passType) {
         _weights[inpIdx].getGrad().addSum(_weightGradTmp, 0, scaleTargets, 1);
         _weights[inpIdx].getGrad().reshape(_filterChannels->at(inpIdx) * _filterPixels->at(inpIdx), _numFilters);
     }
-    //    checkNaN(_weights[inpIdx].getGrad(), "conv_weight_weight");
 
+#ifdef DEBUG
+	if (0) //debug
+    {
+		cout << "ConvLayer::bpropWeights: " << _name << endl;
+		checkNaN(_weights[inpIdx].getGrad(), "conv_weight_weight");
+		_weights[inpIdx].getGrad().print(2, 6);
+	}
+#endif
 }
 
 void ConvLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
@@ -691,12 +769,14 @@ void ConvLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE
                     _padding->at(inpIdx), _stride->at(inpIdx), _channels->at(inpIdx), _groups->at(inpIdx), scaleTargets, 1);
     }
 
+#ifdef DEBUG
 	if (0) //debug
 	{
 		cout << "ConvLayer::bpropActs: " << _name << ", inpIdx=" << inpIdx << endl;
 		v.print(10, 10);
 		_prev[inpIdx]->getActsGrad().print(10, 10);
 	}
+#endif
 }
 
 void ConvLayer::truncBwdActs() {
@@ -827,7 +907,6 @@ void EltwiseSumLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passTy
 			{
 				_inputs[inpIdx]->sliceRows(dim*_numPixels, (dim+1)*_numPixels).scale(_coeffs->at(inpIdx),
 					getActs().sliceRows(c*_numPixels, (c+1)*_numPixels) );
-					
 			}
 		}
     }
@@ -844,6 +923,13 @@ void EltwiseSumLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passTy
 				getActs().sliceRows(c*_numPixels, (c+1)*_numPixels).add(
 						_inputs[inpIdx]->sliceRows(dim*_numPixels, (dim+1)*_numPixels), _coeffs->at(inpIdx));
 			}
+#ifdef DEBUG
+			if (0)//debug
+			{
+				cout << "EltwiseSumLayer::fpropActs, " << _name << ": inpIdx=" << inpIdx << endl;
+				getActs().print(0, 4, 0, 6);
+			}
+#endif
 		}
     }
 }
@@ -867,12 +953,13 @@ void EltwiseSumLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
 	{
 		if (scaleTargets == 0)
 		{
-			_prev[inpIdx]->getActsGrad().resize(_inputs[inpIdx]->getNumRows(), _inputs[inpIdx]->getNumCols());
+			_inputs[inpIdx]->scale(0.0, _prev[inpIdx]->getActsGrad());
 		}
 		else
 		{
 			assert(&_prev[inpIdx]->getActsGrad() != &v);
 		}
+		checkNaN(_prev[inpIdx]->getActsGrad(), "prev acts grad-1");
 		_prev[inpIdx]->getActsGrad().scale(scaleTargets);
 		for (int c=0; c<_channels; c++)
 		{
@@ -880,15 +967,20 @@ void EltwiseSumLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
 		            v.sliceRows(c*_numPixels, (c+1)*_numPixels), _coeffs->at(inpIdx)); 
 		}
 	}
-	if (0) //debug
+#ifdef DEBUG
+	if (1) //debug
 	{
-		cout << "EltwiseSumLayer::bpropActs, dim=" << dim << ", scaleTargets=" << scaleTargets
+		cout << "EltwiseSumLayer::bpropActs " << _name << ", dim=" << dim << ", scaleTargets=" << scaleTargets
 				<< ", _numPixels=" << _numPixels << endl;
 		cout << "===== actsgrad =====" << endl;
 		_prev[inpIdx]->getActsGrad().print(10, 1);
+		_prev[inpIdx]->getActsGrad().printShape("prev acts grad");
+		checkNaN(_prev[inpIdx]->getActsGrad(), "prev acts grad");
 		cout << "===== v =====" << endl;
 		v.print(10, 1);
+		checkNaN(v, "v");
 	}
+#endif
 }
 
 /* 
@@ -931,11 +1023,13 @@ void EltwiseProdLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passT
 			}
 		}
     }
+#ifdef DEBUG
 	if (0) //debug
 	{
 		cout << "==== fprop ====\n";
 		getActs().print(0, 4, 0, 6);
 	}
+#endif
 }
 
 void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType)
@@ -981,6 +1075,7 @@ void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PA
 		}
     }
 
+#ifdef DEBUG
 	if (0) //debug
 	{
 		cout << "==== bprop ====\n";
@@ -989,6 +1084,7 @@ void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PA
 		cout << "bsize=" << bsize << endl;
 		cout << "v size=" << v.getNumRows() << ", " << v.getNumCols() << endl;
 	}
+#endif
 
 	// back propragate to previous input
     if (scaleTargets == 0 ) //first gradient back-prop to _prev[inpIdx]
@@ -1050,6 +1146,7 @@ void BoundBoxOverlapLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE p
 		getActs().scale(-1.f); //convert to cost: 1-overlap 
 		getActs().addScalar(1.f);
 
+#ifdef DEBUG
 		if (0) //debug
 		{
 		cout << "\n==== fprop ====\n";
@@ -1059,6 +1156,7 @@ void BoundBoxOverlapLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE p
 		ai.print(0, 1, 0, 6);
 		getActs().print(0, 1, 0, 6);
 		}
+#endif
     }
 }
 
@@ -1129,6 +1227,7 @@ void BoundBoxOverlapLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets
 		dact.sliceRows(i, i+1).eltwiseMult(v);
 	}
 
+#ifdef DEBUG
 	if (0) //debug
 	{
 	cout << "\n==== bprop ====\n";
@@ -1139,6 +1238,7 @@ void BoundBoxOverlapLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets
 	v.print(0, 1, 0, 6);
 	dact.print(0, 4, 0, 6);
 	}
+#endif
 
 	// back propragate to previous input
     if (scaleTargets == 0 ) //first gradient back-prop to _prev[inpIdx]
@@ -1400,13 +1500,33 @@ ResponseNormLayer(convNet, paramsDict)
 
 void CrossMapGlobalResponseNormLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType)
 {
+#ifdef DEBUG
+	if (0) //debug
+	{
+		cout << "CrossMapGlobalResponseNormLayer::fpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
+		_inputs[0]->print(2, 6);
+	}
+#endif
     convResponseNormCrossMap(*_inputs[0], _denoms, getActs(), _channels, 0, 0, _pow, 0, _blocked);
+#ifdef DEBUG
+	if (0) //debug
+	{
+		getActs().print(2, 6);
+	}
+#endif
 }
 
 void CrossMapGlobalResponseNormLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType)
 {
     convResponseNormCrossMapUndo(v, _denoms, _prev[0]->getActs(), getActs(), _prev[0]->getActsGrad(), _channels, 0, 0,
 								_pow, 0, _blocked, scaleTargets, 1);
+#ifdef DEBUG
+	if (0) //debug
+	{
+		cout << "CrossMapGlobalResponseNormLayer::bpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
+		_prev[0]->getActsGrad().print(2, 6);
+	}
+#endif
 }
 
 
@@ -1531,4 +1651,13 @@ void SumOfSquaresCostLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE 
 
 void SumOfSquaresCostLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
     _prev[inpIdx]->getActsGrad().add(*_inputs[0], scaleTargets, -2 * _coeff);
+#ifdef DEBUG
+	if (1) //debug
+	{
+		cout << "SumOfSquaresCostLayer::bpropActs, " << _name << endl;
+		_prev[inpIdx]->getActsGrad().printShape("v");
+		_prev[inpIdx]->getActsGrad().print(1, 50);
+		checkNaN(_prev[inpIdx]->getActsGrad(), "prev acts grad");
+	}
+#endif
 }

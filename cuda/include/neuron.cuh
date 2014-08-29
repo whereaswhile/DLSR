@@ -460,7 +460,7 @@ public:
     class SqrtGradientOperator {
     public:
         __device__ inline float operator()(float unitActGrad, float unitAct) const {
-            return __fdividef(unitActGrad, 2.0f * unitAct); 
+            return unitAct == 0.0f ? 0.0f : __fdividef(unitActGrad, 2.0f * unitAct); 
         }
     };
     
