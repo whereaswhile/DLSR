@@ -167,7 +167,7 @@ class RegressionDataProvider(DataProvider):
         else:
             self.randseed = 1
             self.randgen = r.Random()
-            self.randgen.seed(self.randseed)
+            #self.randgen.seed(self.randseed)
             self.shuffle()
 
     def advance_batch(self):
