@@ -278,6 +278,7 @@ void checkNaN(NVMatrix &mat, string name) {
 	assert(false);
     }
     */
+	delete tmp;
 }
 
 /* 
@@ -959,7 +960,6 @@ void EltwiseSumLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
 		{
 			assert(&_prev[inpIdx]->getActsGrad() != &v);
 		}
-		checkNaN(_prev[inpIdx]->getActsGrad(), "prev acts grad-1");
 		_prev[inpIdx]->getActsGrad().scale(scaleTargets);
 		for (int c=0; c<_channels; c++)
 		{
