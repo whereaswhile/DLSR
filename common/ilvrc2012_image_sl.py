@@ -27,7 +27,12 @@ class ILVRC2012_Set:
 		print self.param
 
 		self._readLabels(self.param['lblfile'])
-		self.meanImg = np.load(self.param['meanimg'])
+
+                if self.param['meanimg']=='-1':
+                    print 'no meanimg specified, using 128 as mean'
+                    self.meanImg = np.zeros([256, 256, 3])+128
+                else:
+                    self.meanImg = np.load(self.param['meanimg'])
 		self.meanImg = self.meanImg[16:256-16,16:256-16,:]
 		self.imgNum = int(self.param['imgnum'])*self.param['ncrop']
 		print "total expanded images: %d" % self.imgNum
@@ -164,14 +169,17 @@ class ILVRC2012_Set:
 			bb[1] = max(bb[1], 1)
 			bb[2] = max(bb[2], bb[0]+1)
 			bb[3] = max(bb[3], bb[1]+1)
-			img = getsubimg(img, (bb[1], bb[0], bb[3], bb[2]) )
+                        if 1: #crop fg
+                            img = getsubimg(img, (bb[1], bb[0], bb[3], bb[2]) )
+                            w=bb[3]-bb[1]+1
+                            h=bb[2]-bb[0]+1 
+                            l=max(w, h)
+                        else: #remove fg
+                            img[bb[0]:bb[2], bb[1]:bb[3], :] = 128
 
-			w=bb[3]-bb[1]+1
-			h=bb[2]-bb[0]+1 
-			l=max(w, h)
 			if 0: #warp to squre
 				img = scipy.misc.imresize(img, (l, l))
-			elif 1: #zero padding to square
+			elif 0: #zero padding to square
 				fullimg = scipy.misc.imresize(np.round(self.meanImg).astype(np.uint8), (l, l))
 				if w>h:
 					fullimg[(w-h)/2:(w-h)/2+h, :, :]=img
@@ -189,6 +197,8 @@ class ILVRC2012_Set:
 		ratio = 224.0 / min(w,h)
 		img = scipy.misc.imresize(img, (max(224, int(h*ratio)), max(224, int(w*ratio))))
 		img = getsubimg(img, (1, 1, 224, 224))
+		#scipy.misc.imsave('./a.png', img)
+                #assert(0)
 
 		return img-self.meanImg
 
