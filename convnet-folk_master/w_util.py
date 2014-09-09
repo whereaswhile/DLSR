@@ -137,3 +137,23 @@ def pickle2mat(fn, matfn):
     d=pickle.load(open(fn, "rb"))
     sio.savemat(matfn, {'d': d})
 
+def ismember(a, b):
+    bind = {}
+    for i, elt in enumerate(b):
+        if elt not in bind:
+            bind[elt] = i
+    return [bind.get(itm, None) for itm in a]  # None can be replaced by any other "not in b" value
+
+#mean(a>th)==mean(b<=th)
+def findEERTh(a, b, th0, th1):
+    for i in range(100):
+        th=(th0+th1)/2.0;
+        d=n.mean(a>th)-n.mean(b<=th)
+        if abs(d)<0.001:
+            break
+        elif d>0:
+            th0=th
+        else: #d<0
+            th1=th
+    return th
+
