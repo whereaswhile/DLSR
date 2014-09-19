@@ -105,17 +105,17 @@ class ShowConvNet_singleFrame( ShowConvNet):
             Data0 = ftrs[:, 0:respSize*respSize]
             Data = numpy.concatenate( (Data, Data0), axis=0)
 
-            try:
-                output['aux'] = self.test_data_provider.getftraux()
-            except AttributeError:
-                pass
+            # try:
+                # output['aux'] = self.test_data_provider.getftraux()
+            # except AttributeError:
+                # pass
             
             if len(self.feature_path)==0: #evaluate only
                 nacc, ncnt=self.increase_acc_count(ftrs, data[label_idx][0], nacc, ncnt)
                 print "Batch %d evaluated: %.2f" % (batch, 1.0*nacc/ncnt*100)
             else:
                 path_out = os.path.join(self.feature_path, 'data_batch_%d' % batch)
-                pickle(path_out,output)
+                # pickle(path_out,output)
                 print "Wrote feature file %s" % path_out
             sys.stdout.flush()
 
@@ -140,6 +140,8 @@ class ShowConvNet_singleFrame( ShowConvNet):
 
         dict1 = {}
         dict1['Img_y'] = img2
+        # dict1['Patch'] = Data
+        
         if 'saveName' in self.data_param:
             sio.savemat( self.data_param['saveName'], dict1)
             print "Wrote response .mat file %s" % self.data_param['saveName']

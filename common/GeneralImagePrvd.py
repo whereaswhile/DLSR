@@ -40,7 +40,9 @@ class ListaSet:
         self.outdim = np.prod( np.shape(d['Output'][0,i])) # 3rd dim is 13!
         
         print 'Length of self.input = ', len( self.input)
-        
+        if self.param['train']=='0':
+            self.output=[_*0 for _ in self.output]
+            
     def get_num_images(self):
         return self.datanum
     
