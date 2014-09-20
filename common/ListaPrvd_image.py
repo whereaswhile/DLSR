@@ -84,7 +84,7 @@ def getStore(param):
 def test(param):
     ts = ListaSet(param)
     print "{} images in total".format(ts.get_num_images())
-    for i in range(0,62,13):
+    for i in range(150728,150928,20):
         im=ts.get_input(i)
         y=ts.get_output(i)
         print "i={}, input={},\toutput={}".format(i, im.shape, y.shape)
