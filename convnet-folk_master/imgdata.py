@@ -270,6 +270,66 @@ class MultRegressionDataProvider(DataProvider):
     def get_aux(self, batch_num):
         pass
 
+class MultipleDataProvider(DataProvider):    
+    def __init__(self, data_dir, batch_range=[0], init_epoch=1, init_batchnum=None, dp_params={}, test=False):
+        DataProvider.__init__(self, data_dir, batch_range, init_epoch, init_batchnum, dp_params, test, read_meta=False)
+
+        self.data_dir = data_dir
+        # self.batchsize = 128
+        self.batchsize = dp_params['minibatch_size']
+        
+        print 'class: MultipleDataProv, getting image provider from', dp_params['imgprovider']
+        self.store = imp.load_source('neo', dp_params['imgprovider']).getStore(self.data_dir)
+
+        self.numimgs = self.store.get_num_images()
+        if self.numimgs % self.batchsize == 0:
+            self.batch_range = range(self.numimgs / self.batchsize)
+        else:
+            self.batch_range = range(self.numimgs / self.batchsize + 1)
+
+        self.init_batchnum = 0
+        self.curr_batchnum = 0
+        self.indexes = range(self.numimgs)
+
+        if test:
+            self.randseed = 0
+        else:
+            self.randseed = 1
+            self.randgen = r.Random()
+            self.randgen.seed(self.randseed)
+            self.shuffle()
+
+    def advance_batch(self):
+        DataProvider.advance_batch(self)
+        if not self.test and self.curr_batchnum == 0:
+            self.shuffle()
+    
+    def shuffle(self):
+        self.randgen.shuffle(self.indexes)
+        
+    def get_num_classes(self):
+        return self.store.get_num_classes()
+
+    def get_data_dims(self, idx=0):
+        return self.store.get_data_dim(idx)
+
+    def get_batch(self, batch_num):
+        st = batch_num * self.batchsize
+        ed = min((batch_num + 1)*self.batchsize, self.numimgs)
+        cursize = ed - st
+
+        input_num = self.store.get_input_num()
+        data_in = [n.zeros((self.get_data_dims(j), cursize), dtype=n.single) for j in range(input_num)]
+        for i in range(st, ed):
+            img = self.store.get_inputs(self.indexes[i])    
+            for j in range(input_num):
+                data_in[j][:, i%self.batchsize] = img2vec(img[j], True) #use True for vectorize as image 
+
+        return data_in
+    
+    def get_aux(self, batch_num):
+        pass
+
 class VideoRegressionDataProvider(RegressionDataProvider):
     # Designed for real-time video super-resolution processing
     

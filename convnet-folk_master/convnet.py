@@ -242,6 +242,7 @@ class ConvNet(IGPUModel):
         DataProvider.register_data_provider('multinstcls', 'Multi-instance classification provider', MultInstClsDataProvider)
         DataProvider.register_data_provider('regret', 'General Regression provider', RegressionDataProvider)
         DataProvider.register_data_provider('multiregret', 'General Regression provider with multi-inputs', MultRegressionDataProvider)
+        DataProvider.register_data_provider('multdata', 'General data provider with multi-inputs/outputs', MultipleDataProvider)
         DataProvider.register_data_provider('videoreg', 'Video Regression provider', VideoRegressionDataProvider)
        
         return op
