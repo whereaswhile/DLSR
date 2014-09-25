@@ -5,7 +5,10 @@ import scipy.io
 
 from util import *
 
-initFromModel = None
+def foo(modelfile):
+    print foo.initModelFile
+foo.initModel = None
+foo.initModelFile = None
 
 def makew(name, idx, shape, params=None):
     layerName = params[0]
@@ -17,8 +20,10 @@ def makew(name, idx, shape, params=None):
     pdic['fltr']=int(pdic['fltr'])
     #print 'makew pdic:', pdic
 
-    initFromModel = unpickle(modelfile)
-    layers = initFromModel['model_state']['layers']
+    if modelfile!=foo.initModelFile:
+        foo.initModel = unpickle(modelfile)
+        foo.initModelFile = modelfile
+    layers = foo.initModel['model_state']['layers']
     l = [layer for layer in layers if layer['name'] == layerName]
     if len(l) == 0:
         print  'Cannot find the layer ' + layerName + ' for initialization'
@@ -50,8 +55,10 @@ def makeb(name, shape, params=None):
     pdic['fltr']=int(pdic['fltr'])
     #print 'makeb pdic:', pdic
 
-    initFromModel = unpickle(modelfile)
-    layers = initFromModel['model_state']['layers']
+    if modelfile!=foo.initModelFile:
+        foo.initModel = unpickle(modelfile)
+        foo.initModelFile = modelfile
+    layers = foo.initModel['model_state']['layers']
     l = [layer for layer in layers if layer['name'] == layerName]
     if len(l) == 0:
         print  'Cannot find the layer '+ layerName + ' for initialization'
