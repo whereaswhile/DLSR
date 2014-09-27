@@ -60,7 +60,10 @@ class ILVRC2012_Set:
                                                         (self.param['imgsize'], self.param['imgsize']))
                     self.meanImg = self.meanImg.astype(float)
 
-                self.bcfstore=bcfs.bcf_store_file(self.param['imgfile'])
+		if self.param['test']==1:
+			self.bcfstore=bcfs.bcf_store_file(self.param['imgfile'])
+		else:
+			self.bcfstore=bcfs.bcf_store_memory(self.param['imgfile'])
 		self.imgNum = self.bcfstore.size()
                 print "{} files found in bcf file".format(self.imgNum)
                 self.imgList=range(1, 1+self.imgNum) #starts from 1
@@ -85,8 +88,11 @@ class ILVRC2012_Set:
                 sys.stdout.flush()
 
 	def _readLabels(self, lfname):
-		lines = readLines(lfname)
-		self.labels = np.array([int(line) for line in lines])
+		if lfname[-3:]=='txt':
+			lines = readLines(lfname)
+			self.labels = np.array([int(line) for line in lines])
+		else:
+			self.labels = np.fromfile(lfname, dtype='int32')+1 #from 1
 
 	def get_num_images(self):
 		return self.imgNum*len(self.pertcomb)
