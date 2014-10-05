@@ -73,7 +73,7 @@ class ILVRC2012_Set:
 		return self.imgNum
 
 	def get_num_classes(self):
-		return 1008 #1000
+		return 1000
         
 	def get_data_dim(self):
 		return self.param['imgsize']*self.param['imgsize']*3
