@@ -149,9 +149,10 @@ class ILVRC2012_Set:
                     if nb==1: #has single bbx
                         b = np.array(self.bbx[imgidx-1][0], dtype=float)
                     else: #multiple bbx
-                        ridx=range(nb)
-                        self.randgen.shuffle(ridx)
-                        b = np.array(self.bbx[imgidx-1][ridx[0]], dtype=float)
+                        #ridx=range(nb)
+                        #self.randgen.shuffle(ridx)
+                        #b = np.array(self.bbx[imgidx-1][ridx[0]], dtype=float)
+                        b = np.array(self.bbx[imgidx-1][0], dtype=float)
                     # scale from raw size to bcf size
                     s=self.rawsize[imgidx-1][0,0]
                     #print "image converted from", s, "to", (w, h)
