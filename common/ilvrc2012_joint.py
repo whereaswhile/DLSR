@@ -4,8 +4,8 @@ import numpy as np
 import scipy.misc
 import scipy.io as sio
 import random as rnd
-sys.path.append('../')
-sys.path.append('../../common')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'common'))
 from w_util import getsubimg, rgbimg2vec, readLines, gray2vec, rgb2gray
 import bcfstore as bcfs
 import StringIO
@@ -17,7 +17,7 @@ class ILVRC2012_Set:
 	def __init__(self, paramfile):
 		print "ilvrc2012_joint with paramfile:", paramfile
                 self.randgen = rnd.Random()
-		self.param = {'paramfile': paramfile, 'imgsize': 224, 'test': 0}
+		self.param = {'paramfile': paramfile, 'imgsize': 224, 'test': 0, 'loadmem': 0}
 		plines=readLines(paramfile)
 		for l in plines:
                     l=l.rstrip().split()
@@ -26,6 +26,7 @@ class ILVRC2012_Set:
 		self.param['crop']=self.param['crop'].split('+') #list of initial strings
 		self.param['imgsize']=int(self.param['imgsize'])
 		self.param['test']=int(self.param['test'])
+		self.param['loadmem']=int(self.param['loadmem'])
 		assert(self.param['imgsize']==224)
 		print self.param
 
@@ -60,7 +61,7 @@ class ILVRC2012_Set:
                                                         (self.param['imgsize'], self.param['imgsize']))
                     self.meanImg = self.meanImg.astype(float)
 
-		if self.param['test']==1:
+		if self.param['test']==1 or self.param['loadmem']==0:
 			self.bcfstore=bcfs.bcf_store_file(self.param['imgfile'])
 		else:
 			self.bcfstore=bcfs.bcf_store_memory(self.param['imgfile'])
