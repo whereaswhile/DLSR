@@ -28,7 +28,7 @@ from util import *
 from data import *
 from options import *
 from gpumodel import *
-import sys
+import sys, os
 
 import math as m
 import layer as lay
@@ -39,7 +39,8 @@ from imgdata import *
 from os import linesep as NL
 #import pylab as pl
 
-sys.path.append("../cuda/build") #path containing _ConvNet
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'cuda', 'build')) #path containing _ConvNet
+#sys.path.append("../cuda/build") #path containing _ConvNet
 
 class ConvNet(IGPUModel):
     def __init__(self, op, load_dic, dp_params={}):
