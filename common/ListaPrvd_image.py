@@ -60,6 +60,7 @@ class ListaSet:
         [h, w]=self.input[img_id].shape
         [dy, dx]=self.get_offset(h, w, off_id)
         res=self.input[img_id][dy:dy+self.param['inpsize'], dx:dx+self.param['inpsize']]
+        #res=np.rot90(res) #rotate 90
         if rot_id==1:
             res=np.fliplr(res)
         elif rot_id==2:
@@ -78,6 +79,7 @@ class ListaSet:
         dy+=self.param['mrgsize']
         dx+=self.param['mrgsize']
         res=self.output[img_id][dy:dy+self.param['outsize'], dx:dx+self.param['outsize']]
+        #res=np.rot90(res) #rotate 90
         if rot_id==1:
             res=np.fliplr(res)
         elif rot_id==2:
