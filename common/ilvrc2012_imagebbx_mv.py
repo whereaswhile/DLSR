@@ -3,8 +3,8 @@ import os
 import numpy as np
 import scipy.misc
 import scipy.io as sio
-sys.path.append('../')
-sys.path.append('../../common')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'common'))
 from w_util import getsubimg, rgbimg2vec, readLines, gray2vec, rgb2gray
 import bcfstore as bcfs
 import StringIO
