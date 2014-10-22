@@ -82,6 +82,9 @@ def makewfile(name, idx, shape, params=None):
     modelfile = params[0]
     w=n.loadtxt(modelfile, dtype='float32')
     w=w.T
+    if len(w.shape)==1:
+        w=w.reshape((len(w), 1))
+        print 'reshape w to 2D:', w.shape
     return w
 
 # read from mat file
