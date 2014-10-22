@@ -68,10 +68,12 @@ def makeb(name, shape, params=None):
         b=l[0]['biases']
     else:
         b=l[0]['biases'].T
-    if pdic['fltr'] > b.shape[0]:
+    if pdic['fltr'] > b.shape[-1]:
         print 'append zeros to form %d filters' % pdic['fltr']
-        tmp=n.zeros([pdic['fltr'], ]+list(b.shape[1:]), dtype=b.dtype)
-        tmp[0:b.shape[0]]=b
+	assert(b.shape[0]==1)
+	assert(len(b.shape)==2)
+        tmp=n.zeros([1, pdic['fltr']], dtype=b.dtype)
+        tmp[0,0:b.shape[1]]=b
         b=tmp
     return b
 

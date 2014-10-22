@@ -3,8 +3,8 @@ import os
 import numpy as np
 import scipy.misc
 import scipy.io as sio
-sys.path.append('../')
-sys.path.append('../../common')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'common'))
 from w_util import getsubimg, rgbimg2vec, readLines, gray2vec, rgb2gray
 import bcfstore as bcfs
 import StringIO
@@ -88,8 +88,8 @@ class ILVRC2012_Set:
                     print 'cannot parse imgList'
                     assert(0)
                 self._readLabels(self.param['lblfile'])
-		#self.imgNum = len(self.imgList)
-		self.imgNum = 1024
+		self.imgNum = len(self.imgList)
+		#self.imgNum = 1024
 		print '%d images found' % self.imgNum
 		self.curidx = -1 #globla index
 		self.curimgidx = -1
