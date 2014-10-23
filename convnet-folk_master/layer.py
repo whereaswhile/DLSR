@@ -636,9 +636,9 @@ class EltwiseProdLayerParser(LayerWithInputParser):
                 raise LayerParsingError("Layer '%s':  dimensionality of the first input must be greater than all the others." % name +
                                         " Got dimensionalities: "+", ".join(str(s) for s in dic['numInputs']))
         dic['outputs'] = dic['numInputs'][0]
-        dic['usesInputs'] = False
+        dic['usesInputs'] = True
         dic['usesActs'] = False
-        dic['forceOwnActs'] = False
+        dic['forceOwnActs'] = True
         
         dic['dimensions'] = mcp.safe_get_int_list(name, 'dimensions', default=[-1] * len(dic['inputs']))
         dic['channels'] = mcp.safe_get_int(name, 'channels')

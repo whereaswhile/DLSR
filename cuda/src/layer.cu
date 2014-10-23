@@ -546,7 +546,7 @@ void FCLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE p
 #ifdef DEBUG
 	if (1) //debug
 	{   
-		cout << "FCLayer::bpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
+		cout << "before FCLayer::bpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
 		v.printShape("v");
 		v.print(64, 1);
 		checkNaN(v, "v");
@@ -556,6 +556,14 @@ void FCLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE p
     NVMatrix& weights_T = _weights[inpIdx].getW().getTranspose();
     _prev[inpIdx]->getActsGrad().addProduct(v, weights_T, scaleTargets, 1);
     delete &weights_T;
+#ifdef DEBUG
+	if (1) //debug
+	{   
+		cout << "after FCLayer::bpropActs, " << _name << ", inpIdx=" << inpIdx << endl;
+		_prev[inpIdx]->getActsGrad().printShape("prev acts grad");
+		_prev[inpIdx]->getActsGrad().print(64, 3);
+	}
+#endif
 }
 
 void FCLayer::bpropBiases(NVMatrix& v, PASS_TYPE passType) {
@@ -1024,10 +1032,16 @@ void EltwiseProdLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passT
 		}
     }
 #ifdef DEBUG
-	if (0) //debug
+	if (1) //debug
 	{
-		cout << "==== fprop ====\n";
+		cout << "==== EltwiseProdLayer::fpropActs, inpIdx=" << inpIdx << " ====\n";
+		cout << "scaleTargets: " << scaleTargets << ", coeff: " << _coeffs->at(inpIdx) << "\n";
+		cout << "input0\n";
+		_inputs[0]->print(3, 20);
+		cout << "input1\n";
+		_inputs[1]->print(3, 20);
 		getActs().print(0, 4, 0, 6);
+		cout << long(_inputs[1]) << ", " << long(&getActs()) << "\n";
 	}
 #endif
 }
@@ -1060,6 +1074,16 @@ void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PA
 		}
 	}
 
+#ifdef DEBUG
+	cout << "==== EltwiseProdLayer::bpropActs, inpIdx=" << inpIdx << " ====\n";
+	cout << "input0\n";
+	_inputs[0]->print(3, 20);
+	cout << "input1\n";
+	_inputs[1]->print(3, 20);
+	cout << "dact\n";
+	dact.print(3, 20);
+#endif
+
 	dact.eltwiseMult(v); // multiply with gradents from later layers
     if (coeff==-1)
 	{
@@ -1075,17 +1099,6 @@ void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PA
 		}
     }
 
-#ifdef DEBUG
-	if (0) //debug
-	{
-		cout << "==== bprop ====\n";
-		cout << "previous layer size = " << _prev.size() << endl;
-		cout << "coeff=" << coeff << endl;
-		cout << "bsize=" << bsize << endl;
-		cout << "v size=" << v.getNumRows() << ", " << v.getNumCols() << endl;
-	}
-#endif
-
 	// back propragate to previous input
     if (scaleTargets == 0 ) //first gradient back-prop to _prev[inpIdx]
 	{
@@ -1095,6 +1108,17 @@ void EltwiseProdLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PA
 	{
 		_prev[inpIdx]->getActsGrad().add(dact);
 	}
+
+#ifdef DEBUG
+	if (1) //debug
+	{
+		cout << "previous layer size = " << _prev.size() << endl;
+		cout << "coeff=" << coeff << endl;
+		cout << "bsize=" << bsize << endl;
+		_prev[inpIdx]->getActsGrad().printShape("prev grad size=");
+		_prev[inpIdx]->getActsGrad().print(3, 64);
+	}
+#endif
 }
 
 /* 
