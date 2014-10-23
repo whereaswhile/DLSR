@@ -89,7 +89,7 @@ class ILVRC2012_Set:
                     assert(0)
                 self._readLabels(self.param['lblfile'])
 		self.imgNum = len(self.imgList)
-		#self.imgNum = 1024
+		#self.imgNum = 16
 		print '%d images found' % self.imgNum
 		self.curidx = -1 #globla index
 		self.curimgidx = -1
