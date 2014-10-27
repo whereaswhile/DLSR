@@ -293,7 +293,7 @@ NeuronLayer::NeuronLayer(ConvNet* convNet, PyObject* paramsDict)
 
 void NeuronLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
 #ifdef DEBUG
-	if (1 && _name.compare("rms_neuron")==0) //debug
+	if (1) // && _name.compare("rms_neuron")==0) //debug
 	{
 		cout << "NeuronLayer::bpropActs, initial: " << _name << endl;
 		cout << "v size: " << v.getNumRows() << ", " << v.getNumCols() << endl;
@@ -313,10 +313,10 @@ void NeuronLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TY
 #endif
     _neuron->computeInputGrad(v, _prev[0]->getActsGrad(), scaleTargets > 0);
 #ifdef DEBUG
-	if (1 && _name.compare("rms_neuron")==0) //debug
+	if (1) // && _name.compare("rms_neuron")==0) //debug
 	{
 		cout << _name << endl;
-		_prev[0]->getActsGrad().print(50, 1);
+		_prev[0]->getActsGrad().print(4, 50);
 		checkNaN(_prev[0]->getActsGrad(), "prev acts grad");
 	}
 #endif
@@ -721,26 +721,27 @@ void ConvLayer::bpropWeights(NVMatrix& v, int inpIdx, PASS_TYPE passType) {
                              _filterChannels->at(inpIdx), _groups->at(inpIdx), _partialSum, scaleTargets, scaleWGrad);
     } else {
 #ifdef DEBUG
-		if (0) //debug
+		if (1) //debug
 		{
 			cout << "ConvLayer::bpropWeights-1, " << _name << ", inpIdx=" << inpIdx << endl;
-			_prev[inpIdx]->getActs().print(2, 6);
-			v.print(2, 6);
-			_weights[inpIdx].getGrad().print(2, 6);
-			checkNaN(_prev[inpIdx]->getActs(), "prev acts");
-			checkNaN(v, "v");
+			_prev[inpIdx]->getActs().printShape("prev acts");
+			_prev[inpIdx]->getActs().print(30, 6);
 			v.printShape("v");
-			checkNaN(_weights[inpIdx].getGrad(), "w grad");
+			v.print(30, 6);
+			//checkNaN(_prev[inpIdx]->getActs(), "prev acts");
+			//checkNaN(v, "v");
+			//checkNaN(_weights[inpIdx].getGrad(), "w grad");
 		}
 #endif
         convWeightActs(_prev[inpIdx]->getActs(), v, tgt, _imgSize->at(inpIdx), _modulesX, _modulesX, _filterSize->at(inpIdx), _padding->at(inpIdx),
                        _stride->at(inpIdx), _channels->at(inpIdx), _groups->at(inpIdx), _partialSum, scaleTargets, scaleWGrad);
 #ifdef DEBUG
-		if (0) //debug
+		if (1) //debug
 		{
 			cout << "ConvLayer::bpropWeights0" << endl;
-			_weights[inpIdx].getGrad().print(2, 6);
-			checkNaN(_weights[inpIdx].getGrad(), "w grad");
+			_weights[inpIdx].getGrad().printShape("weight grad");
+			_weights[inpIdx].getGrad().print(20, 6);
+			//checkNaN(_weights[inpIdx].getGrad(), "w grad");
 		}
 #endif
     }
@@ -903,6 +904,14 @@ EltwiseSumLayer::EltwiseSumLayer(ConvNet* convNet, PyObject* paramsDict) : Layer
 void EltwiseSumLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType)
 {
 	int dim=_dims->at(inpIdx);
+#ifdef DEBUG
+	if (0)
+	{
+	cout << "EltwiseSumLayer::fpropActs before\n";
+	cout << "inpIdx: " << inpIdx << ", scaleTargets: " << scaleTargets << "\n";
+	_inputs[inpIdx]->printShape("input size: ");
+	}
+#endif
     if (scaleTargets == 0)
 	{
 		if (dim==-1) //first input full size
@@ -978,14 +987,15 @@ void EltwiseSumLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
 #ifdef DEBUG
 	if (1) //debug
 	{
-		cout << "EltwiseSumLayer::bpropActs " << _name << ", dim=" << dim << ", scaleTargets=" << scaleTargets
-				<< ", _numPixels=" << _numPixels << endl;
+		cout << "EltwiseSumLayer::bpropActs " << _name << ", inpIdx=" << inpIdx << ", dim=" << dim 
+				<< ", scaleTargets=" << scaleTargets << ", _numPixels=" << _numPixels << endl;
+		_inputs[inpIdx]->printShape("input size: ");
 		cout << "===== actsgrad =====" << endl;
-		_prev[inpIdx]->getActsGrad().print(10, 1);
 		_prev[inpIdx]->getActsGrad().printShape("prev acts grad");
+		_prev[inpIdx]->getActsGrad().print(10, 10);
 		checkNaN(_prev[inpIdx]->getActsGrad(), "prev acts grad");
 		cout << "===== v =====" << endl;
-		v.print(10, 1);
+		v.print(10, 4);
 		checkNaN(v, "v");
 	}
 #endif
@@ -1032,7 +1042,7 @@ void EltwiseProdLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passT
 		}
     }
 #ifdef DEBUG
-	if (1) //debug
+	if (0) //debug
 	{
 		cout << "==== EltwiseProdLayer::fpropActs, inpIdx=" << inpIdx << " ====\n";
 		cout << "scaleTargets: " << scaleTargets << ", coeff: " << _coeffs->at(inpIdx) << "\n";

@@ -35,6 +35,7 @@ class ListaSet:
         self.imgnum=self.X.shape[1]
         self.pertnum=(self.param['smplside']**2)*self.param['rotate']
         self.datanum=self.imgnum*self.pertnum
+        #self.datanum=1
         self.indim=self.param['inpsize']**2 #np.prod(np.shape(self.X[0,0]))
         self.outdim=self.param['outsize']**2 #np.prod(np.shape(self.Z[0,0]))
         self.input=[self.X[0, i] for i in range(self.imgnum)]
