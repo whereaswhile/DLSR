@@ -13,7 +13,7 @@ foo.initModelFile = None
 def makew(name, idx, shape, params=None):
     layerName = params[0]
     modelfile = params[1]
-    pdic={'trnp': 0, 'fltr': -1}
+    pdic={'trnp': 0, 'fltr': shape[1]}
     for i in range(2,len(params),2):
         pdic[params[i]]=params[i+1]
     pdic['trnp']=int(pdic['trnp'])
@@ -37,18 +37,25 @@ def makew(name, idx, shape, params=None):
     if pdic['trnp'] != 0:
         w=w.T
     if pdic['fltr'] > w.shape[-1]:
-        print 'append zeros to form %d filters' % pdic['fltr']
+        print 'append values to form %d/%d filters' % (pdic['fltr']-w.shape[-1], pdic['fltr'])
         assert(len(w.shape)==2)
         tmp=n.zeros([pdic['fltr'], w.shape[0]], dtype=w.dtype)
         tmp[0:w.shape[1]]=w.T
+        tmp[w.shape[1]:]=n.random.rand(pdic['fltr']-w.shape[1], w.shape[0])/10000.0
         w=tmp.T
+    if shape[0] > w.shape[0]:
+        print 'append values to form %d/%d signals' % (shape[0]-w.shape[0], shape[0])
+        tmp=n.zeros(shape, dtype=w.dtype)
+        tmp[0:w.shape[0], :]=w
+        tmp[w.shape[0]:, :]=n.random.rand(shape[0]-w.shape[0], shape[1])/10000.0
+        w=tmp
     return w
 
 # params: layer name; model file name; transpose
 def makeb(name, shape, params=None):
     layerName = params[0]
     modelfile = params[1]
-    pdic={'trnp': 0, 'fltr': -1}
+    pdic={'trnp': 0, 'fltr': shape[1]}
     for i in range(2,len(params),2):
         pdic[params[i]]=params[i+1]
     pdic['trnp']=int(pdic['trnp'])
@@ -69,11 +76,12 @@ def makeb(name, shape, params=None):
     else:
         b=l[0]['biases'].T
     if pdic['fltr'] > b.shape[-1]:
-        print 'append zeros to form %d filters' % pdic['fltr']
+        print 'append values to form %d/%d filters' % (pdic['fltr']-b.shape[-1], pdic['fltr'])
 	assert(b.shape[0]==1)
 	assert(len(b.shape)==2)
         tmp=n.zeros([1, pdic['fltr']], dtype=b.dtype)
         tmp[0,0:b.shape[1]]=b
+        tmp[0,b.shape[1]:]=n.random.rand(1, pdic['fltr']-b.shape[1])*0.0
         b=tmp
     return b
 
