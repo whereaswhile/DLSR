@@ -225,7 +225,7 @@ def test(param):
                 print "i={}, label={}".format(i, y)
 	print 'image shape:', np.shape(im)
 	b = []
-	for i in range(0, 160, 10):
+	for i in range(0, 20, 1):
 		im = ts.get_input(i)
 		bbx = ts.get_output(i)
 		print i, bbx[0], im.shape
