@@ -219,18 +219,18 @@ class ILVRC2012_Set:
 def test(param):
 	ts = ILVRC2012_Set(param)
 	print "{} images in total".format(ts.get_num_images())
-	for i in range(0,500000,50000):
+	for i in range(0,500,500):
 		im=ts.get_input(i)
 		y=ts.get_label(i)
                 print "i={}, label={}".format(i, y)
 	print 'image shape:', np.shape(im)
 	b = []
-	for i in range(0, 16, 1):
+	for i in range(0, 160, 10):
 		im = ts.get_input(i)
 		bbx = ts.get_output(i)
 		print i, bbx[0], im.shape
 		b += [bbx[0]]
-		scipy.misc.imsave('./img/{}.png'.format(i), im)
+		scipy.misc.imsave('./img/{}.jpg'.format(i), im)
 	sio.savemat('./img/bbx.mat', {'bbx': b})
 
 if __name__ == '__main__':
