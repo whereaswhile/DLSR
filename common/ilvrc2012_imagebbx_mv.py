@@ -5,7 +5,7 @@ import scipy.misc
 import scipy.io as sio
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'common'))
-from w_util import getsubimg, rgbimg2vec, readLines, gray2vec, rgb2gray
+from w_util import getsubimg, rgbimg2vec, readLines, gray2vec, rgb2gray, ismember
 import bcfstore as bcfs
 import StringIO
 
@@ -79,6 +79,11 @@ class ILVRC2012_Set:
                 if self.param['imglist']!='-1':
                     self.imgList=readLines(self.param['imglist'])
                     self.imgList=[int(_.rstrip()) for _ in self.imgList]
+                    if self.param['imgfile'][-4:]=='.bcf': #index in bcf
+			    self.imgList=[np.where(self.bcfList==_)[0] for _ in self.imgList] #index in bbx, from 1
+			    mask=np.array([len(_) for _ in self.imgList])
+			    self.imgList=np.array(self.imgList)[mask==1]
+			    self.imgList=[_[0]+1 for _ in self.imgList]
                 elif self.bbx!=None: 
                     self.imgList=range(1, 1+len(self.bbx)) #starts from 1
                 elif self.param['imgfile'][-4:]=='.bcf':
@@ -94,7 +99,7 @@ class ILVRC2012_Set:
                     clsList = np.where(self.labels==self.param['class'])[0] + 1
                     self.imgList = np.intersect1d(self.imgList, clsList)
                 else:
-                    self.labels = np.zeros([len(self.imgList), ])
+                    self.labels = np.zeros([max(self.imgList)+1, ])
 		self.imgNum = len(self.imgList)
 		print '%d images found' % self.imgNum
 		self.curidx = -1 #globla index
@@ -121,7 +126,7 @@ class ILVRC2012_Set:
 	def get_input(self, idx):
 		self.curidx = idx
 		crop, scale=self.pertcomb[idx%len(self.pertcomb)]
-		imgidx = self.imgList[idx/len(self.pertcomb)]
+		imgidx = self.imgList[idx/len(self.pertcomb)] #image index in the 544539-bbx
 		#print 'idx=%d, imgidx=%d' % (idx, imgidx)
 		if self.curimgidx==imgidx:
 			img = self.curimg
@@ -225,7 +230,7 @@ def test(param):
                 print "i={}, label={}".format(i, y)
 	print 'image shape:', np.shape(im)
 	b = []
-	for i in range(0, 20, 1):
+	for i in range(11000, 13000, 100):
 		im = ts.get_input(i)
 		bbx = ts.get_output(i)
 		print i, bbx[0], im.shape
