@@ -88,6 +88,10 @@ def makeb(name, shape, params=None):
 # read from text file
 def makewfile(name, idx, shape, params=None):
     modelfile = params[0]
+    if len(params)==3:
+	assert(params[1]=='rid')
+	modelfile=str.replace(params[0], 'rid', str(idx+int(params[2])))
+	print 'input', idx, ': ', modelfile
     w=n.loadtxt(modelfile, dtype='float32')
     w=w.T
     if len(w.shape)==1:
