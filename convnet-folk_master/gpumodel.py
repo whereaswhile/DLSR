@@ -148,6 +148,9 @@ class IGPUModel:
             data = next_data
             self.epoch, self.batchnum = data[0], data[1]
             if self.epoch > self.num_epochs:
+                self.sync_with_host()
+                self.test_outputs += [self.get_test_error()]
+                self.conditional_save()
                 break
                
             self.print_iteration()
