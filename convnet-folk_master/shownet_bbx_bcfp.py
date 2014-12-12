@@ -29,6 +29,7 @@ from util import *
 from math import sqrt, ceil, floor
 import os
 import scipy.io as sio
+import scipy.spatial.distance as ssd
 import cPickle as cpickle
 from gpumodel import IGPUModel
 import random as r
@@ -326,7 +327,14 @@ class ShowConvNet(ConvNet):
 		return (nacc, ncnt)
 
     def do_write_features(self):
-        if len(self.feature_path)==0: #evaluate only
+
+        if len(self.cluster_file)>0: #clustering only
+            print "clustering mode, no feature will be saved"
+	    clst=cpickle.load(open(self.cluster_file, 'rb'))
+	    clst=clst['centers']
+            print "%d cluster centers found" % clst.shape[0]
+            cfid=open('cluster_label.txt', 'w')
+        elif len(self.feature_path)==0: #evaluate acc only
             print "evaluation mode, no feature will be saved"
             nacc = 0
             ncnt = 0
@@ -371,7 +379,15 @@ class ShowConvNet(ConvNet):
             # ftrs=ftrs*100 #predited, zero data input, bbx multiplier
             output = {'source_model':self.load_file, 'num_vis':num_ftrs, 'data': ftrs}
             
-            if len(self.feature_path)==0: #evaluate only
+            if len(self.cluster_file)>0: #clustering only
+                d = ssd.cdist(ftrs, clst, 'euclidean')
+                #print 'dist:', d[100, 3], numpy.linalg.norm(ftrs[100]-clst[3]) 
+                di = numpy.argmin(d, axis=1)
+                #print 'di:', di.shape, di
+                cfid.write(' '.join(str(_) for _ in di.tolist())+'\n')
+                if batch%10==0:
+                    print "Batch %d evaluated" % batch
+            elif len(self.feature_path)==0: #evaluate only
                 nacc, ncnt=self.increase_acc_count(ftrs, nacc, ncnt)
                 if ncnt>0:
                     print "Batch %d evaluated: %.2f" % (batch, 1.0*nacc/ncnt*100)
@@ -384,7 +400,10 @@ class ShowConvNet(ConvNet):
             if next_data[1] == b1:
                 break
  
-        if len(self.feature_path)==0: #evaluate only
+        if len(self.cluster_file)>0: #clustering only
+            cfid.close()
+            print "clustering done!"
+        elif len(self.feature_path)==0: #evaluate only
             print "overall accuracy: %.3f%%" % (1.0*nacc/ncnt*100)
 
     def do_write_pixel_proj(self):
@@ -458,6 +477,7 @@ class ShowConvNet(ConvNet):
         op.add_option("scaleview", "scale_view", FloatOptionParser, "Scaling factor of the views in multi-view testing", default=1.0)
         op.add_option("bbxfile", "bbx_file", StringOptionParser, "Contains ground truth bounding box for each image", default="")
         op.add_option("imglist", "img_list", StringOptionParser, "Image list file", default="")
+        op.add_option("clusterfile", "cluster_file", StringOptionParser, "Cluster center saved in pickle format", default="")
         op.options['load_file'].default = None
         return op
     

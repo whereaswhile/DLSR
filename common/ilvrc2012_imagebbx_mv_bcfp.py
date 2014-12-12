@@ -102,6 +102,7 @@ class ILVRC2012_Set:
 		return 4
 
 	def get_input(self, idx):
+		#print 'input idx:', idx
 		self.curidx = idx
 		crop, scale=self.pertcomb[idx%len(self.pertcomb)]
 		imgidx = self.imgList[idx/len(self.pertcomb)] #image index in the 544539-bbx
@@ -144,10 +145,6 @@ class ILVRC2012_Set:
 			dx = 0
 			dy = 0
 		elif crop[0]=='u': #uniform grid
-			crop = [int(_) for _ in crop[1:].split('-')]
-			assert(crop[0]>1)
-			cidx = crop[1]%crop[0]
-			ridx = crop[1]/crop[0]
 			l = int(scale*min(w, h))
                         if (self.param['test']==1): #all over the image
                             x0 = 0
@@ -161,8 +158,16 @@ class ILVRC2012_Set:
                             x1 = min(w-l, bx)
                             y0 = max(0, by-l)
                             y1 = min(h-l, by)
-			dx = int(x0+(x1-x0)*cidx/(crop[0]-1))
-			dy = int(y0+(y1-y0)*ridx/(crop[0]-1))
+			crop = [int(_) for _ in crop[1:].split('-')]
+			cidx = crop[1]%crop[0]
+			ridx = crop[1]/crop[0]
+			assert(crop[0]>0)
+			if (crop[0]>1):
+			    dx = int(x0+(x1-x0)*cidx/(crop[0]-1))
+			    dy = int(y0+(y1-y0)*ridx/(crop[0]-1))
+			else: #(crop[0]==1)
+			    dx = int(x0+(x1-x0)/2)
+			    dy = int(y0+(y1-y0)/2)
 		else:
 			print 'undefined CROP: %s' % crop
 			assert(0)
