@@ -190,6 +190,14 @@ public:
     EltwiseMaxLayer(ConvNet* convNet, PyObject* paramsDict);
 };
 
+class AllMaxLayer : public Layer {
+protected:
+    void fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType);
+    void bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType);
+public:
+    AllMaxLayer(ConvNet* convNet, PyObject* paramsDict);
+};
+
 class BoundBoxOverlapLayer : public Layer {
 protected:
     void fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType);

@@ -1151,6 +1151,35 @@ void EltwiseMaxLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PAS
     computeEltwiseMaxGrad(v, *_inputs[inpIdx], getActs(), _prev[inpIdx]->getActsGrad(), scaleTargets != 0);
 }
 
+
+/* 
+ * =======================
+ * AllMaxLayer 
+ * =======================
+ */
+AllMaxLayer::AllMaxLayer(ConvNet* convNet, PyObject* paramsDict) : Layer(convNet, paramsDict, false){
+}
+
+void AllMaxLayer::fpropActs(int inpIdx, float scaleTargets, PASS_TYPE passType) {
+
+	_inputs[inpIdx]->max(0, getActs());
+#ifdef DEBUG
+	cout << "AllMaxLayer::fpropActs inpIdx=" << inpIdx << endl;
+	_inputs[0]->printShape("input size:");
+	_inputs[inpIdx]->print(0, 4, 0, 6);
+	cout << "output:\n";
+	getActs().print(0, 4, 0, 6);
+#endif
+}
+
+void AllMaxLayer::bpropActs(NVMatrix& v, int inpIdx, float scaleTargets, PASS_TYPE passType) {
+    computeAllMaxGrad(v, *_inputs[inpIdx], getActs(), _prev[inpIdx]->getActsGrad(), scaleTargets != 0);
+#ifdef DEBUG
+    printf("AllMaxLayer::bpropActs prev[%d]->grad:\n", inpIdx);
+	_prev[inpIdx]->getActsGrad().print(0, 4, 0, 6);
+#endif
+}
+
 /* 
  * =======================
  * BoundBoxOverlapLayer

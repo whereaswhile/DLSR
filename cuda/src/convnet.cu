@@ -108,6 +108,8 @@ Layer* ConvNet::initLayer(string& layerType, PyObject* paramsDict) {
         _layers.push_back(new EltwiseProdLayer(this, paramsDict));
     } else if (layerType == "eltmax") {
         _layers.push_back(new EltwiseMaxLayer(this, paramsDict));
+    } else if (layerType == "allmax") {
+        _layers.push_back(new AllMaxLayer(this, paramsDict));
     } else if (layerType == "bbxovlp") {
         _layers.push_back(new BoundBoxOverlapLayer(this, paramsDict));
     } else if (layerType == "neuron") {

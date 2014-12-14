@@ -99,6 +99,12 @@ def makewfile(name, idx, shape, params=None):
         print 'reshape w to 2D:', w.shape
     return w
 
+def makebfile(name, shape, params=None):
+    modelfile = params[0]
+    b=n.loadtxt(modelfile, dtype='float32')
+    b=b.reshape(shape)
+    return b
+
 # read from mat file
 def makewmat(name, idx, shape, params=None):
     varname = params[0]

@@ -664,6 +664,19 @@ class EltwiseMaxLayerParser(LayerWithInputParser):
         print "Initialized elementwise max layer '%s', producing %d outputs" % (name, dic['outputs'])
         return dic
 
+class AllMaxLayerParser(LayerWithInputParser):
+    def __init__(self):
+        LayerWithInputParser.__init__(self)
+        
+    def parse(self, name, mcp, prev_layers, model):
+        dic = LayerWithInputParser.parse(self, name, mcp, prev_layers, model)
+        if len(dic['inputs']) != 1:
+            raise LayerParsingError("Layer '%s': all max layer must have 1 input, got %d." % (name, len(dic['inputs'])))
+        dic['outputs'] = 1
+
+        print "Initialized all-max layer '%s', producing %d outputs" % (name, dic['outputs'])
+        return dic
+
 class BoundBoxOverlapLayerParser(LayerWithInputParser):
     def __init__(self):
         LayerWithInputParser.__init__(self)
@@ -1259,6 +1272,7 @@ layer_parsers = {'data': lambda : DataLayerParser(),
                  'eltsum': lambda : EltwiseSumLayerParser(),
                  'eltprod': lambda : EltwiseProdLayerParser(),
                  'eltmax': lambda : EltwiseMaxLayerParser(),
+                 'allmax': lambda : AllMaxLayerParser(),
                  'bbxovlp': lambda : BoundBoxOverlapLayerParser(),
                  'neuron': lambda : NeuronLayerParser(),
                  'pool': lambda : PoolLayerParser(),

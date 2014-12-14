@@ -185,6 +185,36 @@ void computeEltwiseMaxGrad(NVMatrix& actGrad, NVMatrix& input, NVMatrix& output,
     getLastCudaError("computeEltwiseMaxGrad: Kernel execution failed");
 }
 
+void computeAllMaxGrad(NVMatrix& actGrad, NVMatrix& input, NVMatrix& output, NVMatrix& target, bool add) {
+    assert(actGrad.isContiguous());
+    assert(output.isContiguous());
+    assert(input.isContiguous());
+    assert(actGrad.isSameDims(output));
+    assert(actGrad.getNumCols()==input.getNumCols()); //same batch size
+    assert(actGrad.getNumRows()==1);
+
+    dim3 blocks(DIVUP(actGrad.getNumElements(), 128));
+    dim3 threads(128);
+	for (int i=0; i<input.getNumRows(); i++)
+	{
+		if (add)
+		{
+			assert(actGrad.isSameDims(target.sliceRows(i, i+1)));
+			cudaFuncSetCacheConfig(kEltwiseMaxGrad<128, true>, cudaFuncCachePreferL1);
+			kEltwiseMaxGrad<128, true><<<blocks, threads>>>(actGrad.getDevData(), input.sliceRows(i, i+1).getDevData(),
+					output.getDevData(), target.sliceRows(i, i+1).getDevData(), actGrad.getNumElements());
+		}
+		else
+		{
+			target.resize(input);
+			cudaFuncSetCacheConfig(kEltwiseMaxGrad<128, false>, cudaFuncCachePreferL1);
+			kEltwiseMaxGrad<128, false><<<blocks, threads>>>(actGrad.getDevData(), input.sliceRows(i, i+1).getDevData(),
+					output.getDevData(), target.sliceRows(i, i+1).getDevData(), actGrad.getNumElements());
+		}
+	}
+    getLastCudaError("computeEltwiseMaxGrad: Kernel execution failed");
+}
+
 /*
  * E = -log(y_t)
  * probs:           (numOut, numCases)
