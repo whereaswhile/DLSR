@@ -362,7 +362,7 @@ class ShowConvNet(ConvNet):
             # load the next batch while the current one is computing
             next_data = self.get_next_batch(train=False)
             self.finish_batch()
-            # ftrs=ftrs*100 #predited, zero data input, bbx multiplier
+            ftrs=ftrs*self.lin_scale #predited, zero data input, bbx multiplier
             output = {'source_model':self.load_file, 'num_vis':num_ftrs, 'data': ftrs, 'labels': data[label_idx]}
             try:
                 output['aux'] = self.test_data_provider.getftraux()
@@ -457,6 +457,7 @@ class ShowConvNet(ConvNet):
         op.add_option("bbxfile", "bbx_file", StringOptionParser, "Contains ground truth bounding box for each image", default="")
         op.add_option("sizefile", "size_file", StringOptionParser, "Contains size of each image", default="")
         op.add_option("imglist", "img_list", StringOptionParser, "Image list file", default="")
+        op.add_option("linscale", "lin_scale", FloatOptionParser, "Linear scale of bbx prediction", default=1.0)
         op.options['load_file'].default = None
         return op
     
