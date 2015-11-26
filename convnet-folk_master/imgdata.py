@@ -160,11 +160,15 @@ class RegressionDataProvider(DataProvider):
 
         self.init_batchnum = 0
         self.curr_batchnum = 0
-        self.indexes = range(self.numimgs)
+#        self.indexes = range(self.numimgs) # Uncomment it for ListaPrvd_image.py
 
         if test:
+#            print "Here is TEST!"
+#            self.indexes = range(self.numimgs) # Uncomment it for ListaPrvd_image2.py
+            self.indexes = self.store.get_idx_arr() # Modified for valid indices (uncomment it for ListaPrvd_image2.py)
             self.randseed = 0
         else:
+            self.indexes = self.store.get_idx_arr() # Modified for valid indices (uncomment it for ListaPrvd_image2.py)
             self.randseed = 1
             self.randgen = r.Random()
             #self.randgen.seed(self.randseed)
@@ -194,7 +198,7 @@ class RegressionDataProvider(DataProvider):
         data_in  = n.zeros((self.get_data_dims(0), cursize), dtype = n.single)
         data_out = n.zeros((self.get_data_dims(1), cursize), dtype = n.single)
         for i in range(st, ed):
-            img = self.store.get_input(self.indexes[i])            
+            img = self.store.get_input(self.indexes[i])           
             data_in[:, i%self.batchsize] = img2vec(img, True) #use True for vectorize as image 
             img = self.store.get_output(self.indexes[i])            
             data_out[:, i%self.batchsize] = img2vec(img, True)
