@@ -95,8 +95,10 @@ class ListaSet:
     def get_offset(self, h, w, i):
         iy=i/self.param['smplside']
         ix=i%self.param['smplside']
-        dy=iy*((h-self.param['inpsize'])/(self.param['smplside']-1))
-        dx=ix*((w-self.param['inpsize'])/(self.param['smplside']-1))
+#        dy=iy*((h-self.param['inpsize'])/(self.param['smplside']-1))
+#        dx=ix*((w-self.param['inpsize'])/(self.param['smplside']-1))
+        dy=round(iy*float(h-self.param['inpsize'])/(self.param['smplside']-1))
+        dx=round(ix*float(w-self.param['inpsize'])/(self.param['smplside']-1))
         return dy, dx
 
 def getStore(param):
