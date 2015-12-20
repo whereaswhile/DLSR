@@ -12,7 +12,6 @@ import scipy.signal
 import cPickle as pickle
 import glob
 import scipy.cluster.vq
-import scipy.cluster.vq
 from skimage.feature import hog
 
 sys.path.append("../convnet-folk_master")
@@ -29,7 +28,7 @@ class ListaSet:
         self.param['outsize']=int(self.param['outsize'])
         self.param['mrgsize']=(self.param['inpsize']-self.param['outsize'])/2
         self.param['smplside']=int(self.param['smplPerSide'])
-        self.param['rotate']=max(1, min(4, int(self.param['rotate'])))
+        self.param['rotate']=max(1, min(8, int(self.param['rotate'])))
 
         MAT_IN_VAR=self.param['MAT_IN_VAR']
         MAT_OUT_VAR=self.param['MAT_OUT_VAR']
