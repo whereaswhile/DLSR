@@ -12,6 +12,8 @@ import scipy.signal
 import cPickle as pickle
 import glob
 import scipy.cluster.vq
+import scipy.cluster.vq
+from skimage.feature import hog
 
 sys.path.append("../convnet-folk_master")
 from w_util import readLines
@@ -117,6 +119,15 @@ class ListaSet:
             res=np.flipud(res).T
         elif rot_id==3:
             res=res.T
+        elif rot_id==4:
+            res=np.fliplr(res).T
+        elif rot_id==5:
+            res=np.flipud(res)
+        elif rot_id==6:
+            res=np.rot90(res,2)
+        elif rot_id==7:
+            res=np.rot90(res,2).T
+
         return res
 
     def get_output(self, idx):
@@ -136,17 +147,27 @@ class ListaSet:
             res=np.flipud(res).T
         elif rot_id==3:
             res=res.T
+        elif rot_id==4:
+            res=np.fliplr(res).T
+        elif rot_id==5:
+            res=np.flipud(res)
+        elif rot_id==6:
+            res=np.rot90(res,2)
+        elif rot_id==7:
+            res=np.rot90(res,2).T
+
         return res
 
-   
     def getmeta(self, idx):
         return self.param
                 
     def get_offset(self, h, w, i):
         iy=i/self.param['smplside']
         ix=i%self.param['smplside']
-        dy=iy*((h-self.param['inpsize'])/(self.param['smplside']-1))
-        dx=ix*((w-self.param['inpsize'])/(self.param['smplside']-1))
+#        dy=iy*((h-self.param['inpsize'])/(self.param['smplside']-1))
+#        dx=ix*((w-self.param['inpsize'])/(self.param['smplside']-1))
+        dy=round(iy*float(h-self.param['inpsize'])/(self.param['smplside']-1))
+        dx=round(ix*float(w-self.param['inpsize'])/(self.param['smplside']-1))
         return dy, dx
 
 def getStore(param):
@@ -185,6 +206,100 @@ def transferData(param):
     scipy.io.savemat( 'testPatches13x13.mat', d1)
     print "Data stored successfully!"
 
+def hogKmeansClustering(param, orientNum, DATA_FOLDER):
+    ts = ListaSet(param)
+    print "{} images in total".format(ts.get_num_images())
+
+    clustNum = 5
+#    d1 = {}
+#    Patches = np.empty([ts.get_num_images(), 13, 13 ], dtype=np.float32)
+    PatchArr = np.empty([ ts.get_num_images(), orientNum])
+    for i in range( ts.get_num_images()):
+#        Patches[i,:,:] = ts.get_input(i)
+        PatchArr[i, :] = hog( ts.get_input(i), orientations=orientNum, pixels_per_cell=(13, 13), cells_per_block=(1, 1), visualise=False)
+        # for 5x5 centered at 13x13 input    
+#        PatchArr[i, :] = hog( ts.get_input(i)[4:9, 4:9], orientations=orientNum, pixels_per_cell=(5, 5), cells_per_block=(1, 1), visualise=False)
+        # for 17x17 input
+#        PatchArr[i, :] = hog( ts.get_input(i)[6:11, 6:11], orientations=orientNum, pixels_per_cell=(5, 5), cells_per_block=(1, 1), visualise=False)
+        if i % 10000 == 0:
+            print i
+
+    print "load existing codebook..."
+    codebook = np.load( DATA_FOLDER+'/4bins_5cls/codebookArtificial2.npy')
+    print codebook
+
+    print "assign codes for patches..."
+    code, dist = scipy.cluster.vq.vq( PatchArr, codebook)
+
+    d1 = {}
+    for i in range( clustNum):
+        d1['label'+str(i+1)+'_idx'] = np.where( code == i)[0].astype( np.uint32)
+    d1['labelArr'] = code.astype( np.uint32)
+#        d1['PatchArr'+str(i+1)] = Patches[ np.where( code == i)[0], :, :].astype( np.uint32)
+#    d1['PatchArr'] = Patches
+
+    scipy.io.savemat( DATA_FOLDER+'/4bins_5cls/trainlabelsArtificial13code2_sps100_r8.mat', d1)
+#    scipy.io.savemat( DATA_FOLDER+'/4bins_5cls/testlabelsArtificial13c5code3.mat', d1)
+#    scipy.io.savemat( DATA_FOLDER+'/4bins_5cls/testPatches.mat', d1)
+#    scipy.io.savemat( DATA_FOLDER+'/4bins_5cls/testpatches_sps200.mat', d1)
+
+# clustering according to specific filters
+def Cluster(param, DATA_FOLDER):
+    ts = ListaSet(param)
+    Data = scipy.io.loadmat('./data/filter_template3.mat')
+    Filter2 = np.rot90( Data['Filter2'], 2)
+
+#    corList = []
+#    TVList= []
+    corArr = np.empty(ts.get_num_images())
+    TVArr = np.empty(ts.get_num_images())
+
+    for i in range( ts.get_num_images()):
+#    for i in range( 100):
+        tmp = ts.get_input(i)
+        tmp2 = tmp - np.mean( tmp)
+        tmp3 = tmp2 / np.linalg.norm(tmp2, 'fro')
+#        Cor = scipy.signal.convolve2d(tmp3, Filter2, 'valid')
+#        corList.append( Cor)    
+        corArr[i] = scipy.signal.convolve2d(tmp3, Filter2, 'valid')
+    
+        dx = scipy.ndimage.sobel(tmp, 0)
+        dy = scipy.ndimage.sobel(tmp, 1)
+        mag = np.hypot(dx, dy)
+#        TVList.append( np.sum(mag))
+        TVArr[i] = np.sum(mag)
+
+        if i % 10000 == 0:
+            print i
+
+    np.save( DATA_FOLDER+'/trainCorrelation.npy', corArr)
+    np.save( DATA_FOLDER+'/trainTotalVariation.npy', TVArr)
+    return
+
+def getClusterLabel(param, trainFlag, DATA_FOLDER):
+    if trainFlag == '1':
+        corArr = np.load( DATA_FOLDER+'/trainCorrelation.npy') 
+        TVArr = np.load( DATA_FOLDER+'/trainTotalVariation.npy') 
+    else:
+        corArr = np.load( DATA_FOLDER+'/testCorrelation.npy') 
+        TVArr = np.load( DATA_FOLDER+'/testTotalVariation.npy') 
+    
+    corThres = 0.85
+    TVThres = 0
+
+#    print (corArr >= corThres)
+#    PatchIdx = np.where( [ x&y for (x, y) in zip(corArr >= corThres, TVArr >= TVThres)] )[0].astype( np.uint32)
+#    print PatchIdx.shape
+#    print PatchIdx[:10]
+    d1 = {}
+    i = 0
+#    d1['label'+str(i+1)+'_idx'] = np.where( code == i)[0].astype( np.uint32)
+    d1['label'+str(i+1)+'_idx'] = np.where( [ x&y for (x, y) in zip(corArr >= corThres, TVArr >= TVThres)] )[0].astype( np.uint32)
+    if trainFlag == '1':
+        scipy.io.savemat( DATA_FOLDER+'/trainlabels_TVThres0_sps150.mat', d1)
+    else:
+        scipy.io.savemat( DATA_FOLDER+'/testlabels_TVThres0_sps200.mat', d1)
+    
 # k-means clustering of training samples
 def kmeans(param):
     ts = ListaSet(param)
@@ -303,11 +418,15 @@ def test(param):
 
 if __name__ == '__main__':
     print 'testing ListaPrvd.py!'
-    assert(len(sys.argv)==2)
+    assert(len(sys.argv) >= 2)
 #    varThreshold(sys.argv[1], 100)
 #    kmeans(sys.argv[1])
 #    drawSamples(sys.argv[1])
 #    test(sys.argv[1])
 #    drawAnchorSamples(sys.argv[1], 100)
 
-    transferData( sys.argv[1])
+#    transferData( sys.argv[1])
+    hogKmeansClustering( sys.argv[1], 4, './hogCluster' )
+
+#    Cluster( sys.argv[1], './filterCluster')
+#    getClusterLabel( sys.argv[1], sys.argv[2], './filterCluster')
